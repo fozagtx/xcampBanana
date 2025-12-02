@@ -1,7 +1,9 @@
 "use client";
 
 import { useAuth, useAuthState } from "@campnetwork/origin/react";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function BrandkitMint() {
   const { authenticated } = useAuthState();
@@ -11,12 +13,14 @@ export default function BrandkitMint() {
   const [name, setName] = useState("");
   const [minting, setMinting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const previewRef = useRef<HTMLPreElement>(null);
 
   const formatJSON = (jsonString: string) => {
     try {
       const parsed = JSON.parse(jsonString);
       return JSON.stringify(parsed, null, 2);
-    } catch (e) {
+    } catch {
       return jsonString;
     }
   };
@@ -25,7 +29,7 @@ export default function BrandkitMint() {
     try {
       JSON.parse(jsonString);
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   };
@@ -76,6 +80,52 @@ export default function BrandkitMint() {
     }
   };
 
+  const exportToPDF = async () => {
+    if (!previewRef.current || !name) return;
+    
+    setExportingPdf(true);
+    try {
+      const canvas = await html2canvas(previewRef.current, {
+        backgroundColor: '#fafafa',
+        scale: 2,
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight) * 200;
+      const imgX = (pdfWidth - imgWidth * ratio / 200) / 2;
+      const imgY = 10;
+      
+      pdf.setFontSize(16);
+      pdf.text(`Brandkit: ${name}`, pdfWidth / 2, 20, { align: 'center' });
+      
+      pdf.addImage(
+        imgData,
+        'PNG',
+        imgX,
+        imgY + 10,
+        imgWidth * ratio / 200,
+        imgHeight * ratio / 200
+      );
+      
+      pdf.save(`${name.replace(/\s+/g, "-").toLowerCase()}-brandkit.pdf`);
+    } catch (e) {
+      console.error("Error exporting PDF:", e);
+      alert("Failed to export PDF.");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   if (!authenticated) {
     return null;
   }
@@ -122,16 +172,29 @@ export default function BrandkitMint() {
                 <label className="block text-sm font-medium text-zinc-900">
                   Preview (Formatted)
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="text-sm text-yellow-600 hover:text-yellow-700 font-medium"
-                >
-                  {showPreview ? "👁️ Hide" : "👁️ Show"} Preview
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={exportToPDF}
+                    disabled={exportingPdf || !name}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {exportingPdf ? "📄 Exporting..." : "📄 Export PDF"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPreview(!showPreview)}
+                    className="text-sm text-yellow-600 hover:text-yellow-700 font-medium"
+                  >
+                    {showPreview ? "👁️ Hide" : "👁️ Show"} Preview
+                  </button>
+                </div>
               </div>
               {showPreview && (
-                <pre className="w-full p-4 border rounded-md bg-zinc-50 border-zinc-300 font-mono text-sm overflow-x-auto max-h-64 overflow-y-auto">
+                <pre 
+                  ref={previewRef}
+                  className="w-full p-4 border rounded-md bg-zinc-50 border-zinc-300 font-mono text-sm overflow-x-auto max-h-64 overflow-y-auto"
+                >
                   <code className="text-zinc-800">{formatJSON(content)}</code>
                 </pre>
               )}
