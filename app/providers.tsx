@@ -10,7 +10,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <CampProvider
-        clientId="fce77d7a-8085-47ca-adff-306a933e76aa"
+        clientId={process.env.NEXT_PUBLIC_CAMP_CLIENT_ID || "fce77d7a-8085-47ca-adff-306a933e76aa"}
       >
         {children}
       </CampProvider>

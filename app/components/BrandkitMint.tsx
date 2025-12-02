@@ -1,7 +1,9 @@
 "use client";
 
 import { useAuth, useAuthState } from "@campnetwork/origin/react";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function BrandkitMint() {
   const { authenticated } = useAuthState();
@@ -11,12 +13,15 @@ export default function BrandkitMint() {
   const [name, setName] = useState("");
   const [minting, setMinting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
 
   const formatJSON = (jsonString: string) => {
     try {
       const parsed = JSON.parse(jsonString);
       return JSON.stringify(parsed, null, 2);
-    } catch (e) {
+    } catch {
       return jsonString;
     }
   };
@@ -25,37 +30,79 @@ export default function BrandkitMint() {
     try {
       JSON.parse(jsonString);
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   };
 
+  const exportToPDF = async () => {
+    if (!name || !previewRef.current) return;
+    
+    setExportingPdf(true);
+    try {
+      const canvas = await html2canvas(previewRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF();
+      
+      // Add title
+      pdf.setFontSize(20);
+      pdf.text(`Brandkit: ${name}`, 20, 20);
+      
+      // Add the preview image
+      const imgWidth = 170;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 20, 30, imgWidth, imgHeight);
+      
+      // Save the PDF
+      const fileName = `${name.replace(/\s+/g, '-').toLowerCase()}-brandkit.pdf`;
+      pdf.save(fileName);
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      alert('Failed to export PDF');
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   const mintBrandkit = async () => {
-    if (!content || !name) return;
+    if ((!content && !pdfFile) || !name) return;
     setMinting(true);
     try {
-      const jsonContent = JSON.stringify(
-        { prompt: content, type: "Nanabanapro Brandkit" },
-        null,
-        2,
-      );
-      const blob = new Blob([jsonContent], { type: "application/json" });
-      const file = new File(
-        [blob],
-        `${name.replace(/\s+/g, "-").toLowerCase()}.json`,
-        { type: "application/json" },
-      );
+      let file: File;
+      
+      if (pdfFile) {
+        // Use uploaded PDF file
+        file = pdfFile;
+      } else {
+        // Create JSON file from content
+        const jsonContent = JSON.stringify(
+          { prompt: content, type: "Nanabanapro Brandkit" },
+          null,
+          2,
+        );
+        const blob = new Blob([jsonContent], { type: "application/json" });
+        file = new File(
+          [blob],
+          `${name.replace(/\s+/g, "-").toLowerCase()}.json`,
+          { type: "application/json" },
+        );
+      }
 
+      // Fixed license terms according to Origin SDK constraints
       const license = {
-        price: 1000000000000000n,
-        duration: 0,
-        royaltyBps: 1000,
+        price: 1000000000000000n, // 0.001 CAMP minimum
+        duration: 86400, // 1 day minimum (86400 seconds)
+        royaltyBps: 1000, // 10% royalty (1000 basis points)
         paymentToken: "0x0000000000000000000000000000000000000000" as const,
       };
 
       const metadata = {
         name: `Brandkit: ${name}`,
-        description: "Nanabanapro Brandkit JSON Prompt",
+        description: pdfFile ? "Nanabanapro Brandkit PDF" : "Nanabanapro Brandkit JSON Prompt",
       };
 
       if (!auth.origin) {
@@ -67,10 +114,11 @@ export default function BrandkitMint() {
       alert(`Brandkit minted successfully! Token ID: ${result}`);
       setContent("");
       setName("");
+      setPdfFile(null);
       setShowPreview(false);
     } catch (e) {
       console.error("Error minting brandkit:", e);
-      alert("Failed to mint brandkit.");
+      alert("Failed to mint brandkit. Please check all parameters and try again.");
     } finally {
       setMinting(false);
     }
@@ -99,22 +147,55 @@ export default function BrandkitMint() {
               placeholder="e.g. Cyberpunk Theme"
             />
           </div>
+          
           <div>
             <label className="block text-sm font-medium mb-1 text-zinc-900">
-              JSON Prompt Content
+              Upload PDF (Optional) or Create JSON Content Below
             </label>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full p-3 border rounded-md h-32 bg-white border-zinc-300 font-mono text-sm text-black"
-              placeholder='{"style": "cyberpunk", "colors": ["#ff00ff", "#00ffff"]}'
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setPdfFile(file);
+                  setContent(""); // Clear JSON content when PDF is uploaded
+                }
+              }}
+              className="w-full p-3 border rounded-md bg-white border-zinc-300 text-black"
             />
-            {content && !isValidJSON(content) && (
-              <p className="text-sm text-red-600 mt-1">
-                ⚠️ Invalid JSON format
-              </p>
+            {pdfFile && (
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-sm text-zinc-600">PDF: {pdfFile.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setPdfFile(null)}
+                  className="text-sm text-red-600 hover:text-red-700"
+                >
+                  Remove PDF
+                </button>
+              </div>
             )}
           </div>
+          
+          {!pdfFile && (
+            <div>
+              <label className="block text-sm font-medium mb-1 text-zinc-900">
+                JSON Prompt Content
+              </label>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="w-full p-3 border rounded-md h-32 bg-white border-zinc-300 font-mono text-sm text-black"
+                placeholder='{"style": "cyberpunk", "colors": ["#ff00ff", "#00ffff"]}'
+              />
+              {content && !isValidJSON(content) && (
+                <p className="text-sm text-red-600 mt-1">
+                  ⚠️ Invalid JSON format
+                </p>
+              )}
+            </div>
+          )}
 
           {content && isValidJSON(content) && (
             <div>
@@ -122,28 +203,41 @@ export default function BrandkitMint() {
                 <label className="block text-sm font-medium text-zinc-900">
                   Preview (Formatted)
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="text-sm text-yellow-600 hover:text-yellow-700 font-medium"
-                >
-                  {showPreview ? "👁️ Hide" : "👁️ Show"} Preview
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={exportToPDF}
+                    disabled={exportingPdf || !name}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {exportingPdf ? "📄 Exporting..." : "📄 Export PDF"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPreview(!showPreview)}
+                    className="text-sm text-yellow-600 hover:text-yellow-700 font-medium"
+                  >
+                    {showPreview ? "👁️ Hide" : "👁️ Show"} Preview
+                  </button>
+                </div>
               </div>
               {showPreview && (
-                <pre className="w-full p-4 border rounded-md bg-zinc-50 border-zinc-300 font-mono text-sm overflow-x-auto max-h-64 overflow-y-auto">
-                  <code className="text-zinc-800">{formatJSON(content)}</code>
-                </pre>
+                <div ref={previewRef} className="w-full p-4 border rounded-md bg-zinc-50 border-zinc-300">
+                  <h3 className="text-lg font-bold mb-2 text-zinc-900">Brandkit: {name}</h3>
+                  <pre className="font-mono text-sm overflow-x-auto max-h-64 overflow-y-auto">
+                    <code className="text-zinc-800">{formatJSON(content)}</code>
+                  </pre>
+                </div>
               )}
             </div>
           )}
 
           <button
             onClick={mintBrandkit}
-            disabled={minting || !content || !name || !isValidJSON(content)}
+            disabled={minting || (!content && !pdfFile) || !name || (content !== "" && !isValidJSON(content))}
             className="w-full py-3 bg-linear-to-r from-yellow-600 to-orange-600 text-white font-medium rounded-lg hover:from-yellow-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
           >
-            {minting ? "Minting..." : "Mint Brandkit"}
+            {minting ? "Minting..." : `Mint Brandkit ${pdfFile ? "(PDF)" : "(JSON)"}`}
           </button>
         </div>
       </div>
