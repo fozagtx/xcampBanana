@@ -5,38 +5,55 @@ import { useState } from "react";
 
 class TwitterAPI {
   private apiKey: string;
+  private clientId: string;
   private baseUrl = "https://wv2h4to5qa.execute-api.us-east-2.amazonaws.com/dev";
 
-  constructor({ apiKey }: { apiKey: string }) {
+  constructor({ apiKey, clientId }: { apiKey: string; clientId: string }) {
     this.apiKey = apiKey;
+    this.clientId = clientId;
   }
 
   async fetchTweetsByUsername(username: string, page: number, limit: number) {
-    const response = await fetch(`${this.baseUrl}/twitter/tweets?username=${username}&page=${page}&limit=${limit}`, {
-      headers: {
-        "x-api-key": this.apiKey
-      }
-    });
+    console.log(`Fetching tweets for @${username} with API key: ${this.apiKey?.substring(0, 8)}...`);
+    
+    // Try multiple endpoint structures
+    const endpoints = [
+      `${this.baseUrl}/twitter/tweets?username=${username}&page=${page}&limit=${limit}`,
+      `${this.baseUrl}/twitter/user/${username}/tweets?page=${page}&limit=${limit}`,
+      `${this.baseUrl}/api/twitter/tweets?username=${username}&page=${page}&limit=${limit}`,
+    ];
 
-    if (!response.ok) {
-        // Fallback to try another endpoint structure if the first one fails
-        const response2 = await fetch(`${this.baseUrl}/twitter/user/${username}/tweets?page=${page}&limit=${limit}`, {
-            headers: {
-                "x-api-key": this.apiKey
-            }
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`Trying endpoint: ${endpoint}`);
+        const response = await fetch(endpoint, {
+          headers: {
+            "x-api-key": this.apiKey,
+            "Content-Type": "application/json",
+          },
         });
-        if (!response2.ok) {
-            throw new Error(`Failed to fetch tweets`);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("API Response:", data);
+          return data;
+        } else {
+          console.warn(`Endpoint ${endpoint} failed with status: ${response.status}`);
+          const errorText = await response.text();
+          console.warn("Error response:", errorText);
         }
-        return response2.json();
+      } catch (error) {
+        console.warn(`Endpoint ${endpoint} error:`, error);
+      }
     }
 
-    return response.json();
+    throw new Error(`Failed to fetch tweets from all endpoints for user: ${username}`);
   }
 }
 
 const twitterApi = new TwitterAPI({
-  apiKey: "4f1a2c9c-008e-4a2e-8712-055fa04f9ffa",
+  apiKey: process.env.NEXT_PUBLIC_TWITTER_API_KEY || "4f1a2c9c-008e-4a2e-8712-055fa04f9ffa",
+  clientId: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || "fce77d7a-8085-47ca-adff-306a933e76aa",
 });
 
 export default function TweetDashboard() {
@@ -51,44 +68,69 @@ export default function TweetDashboard() {
   const [minting, setMinting] = useState<string | null>(null);
 
   const fetchTweets = async () => {
-    if (!username) return;
+    if (!username) {
+      alert("Please enter a username");
+      return;
+    }
+    
+    // Clean username (remove @ if present)
+    const cleanUsername = username.startsWith('@') ? username.substring(1) : username;
+    
     setLoading(true);
+    setTweets([]); // Clear previous results
     try {
-      const data = await twitterApi.fetchTweetsByUsername(username, 1, 20);
-      console.log("Tweets data:", data);
-      // Adjust based on actual API response, assuming it might be { data: [...] } or [...]
-      // The SDK docs example: const tweets = await twitter.fetchTweetsByUsername("jack", 1, 10);
-      // Usually returns an array or object.
-      // We will handle both safely.
-      const tweetsList = Array.isArray(data) 
-        ? data 
-        : (data as Record<string, unknown>).data || (data as Record<string, unknown>).items || [];
-      setTweets(Array.isArray(tweetsList) ? tweetsList : []);
+      console.log(`Fetching tweets for ${cleanUsername}...`);
+      const data = await twitterApi.fetchTweetsByUsername(cleanUsername, 1, 20);
+      console.log("Raw tweets data:", data);
+      
+      // Handle different response formats
+      let tweetsList: Array<Record<string, unknown>> = [];
+      
+      if (Array.isArray(data)) {
+        tweetsList = data;
+      } else if (data && typeof data === 'object') {
+        // Try common response structures
+        tweetsList = (data.data as Array<Record<string, unknown>>) || 
+                     (data.tweets as Array<Record<string, unknown>>) ||
+                     (data.items as Array<Record<string, unknown>>) ||
+                     (data.results as Array<Record<string, unknown>>) ||
+                     [];
+      }
+      
+      console.log(`Processed ${tweetsList.length} tweets`);
+      setTweets(tweetsList);
+      
+      if (tweetsList.length === 0) {
+        alert(`No tweets found for @${cleanUsername}. Make sure the username is correct and the account is public.`);
+      }
     } catch (e) {
       console.error("Error fetching tweets", e);
-      alert("Failed to fetch tweets. Make sure the username is correct and you have authenticated.");
+      alert(`Failed to fetch tweets: ${e instanceof Error ? e.message : 'Unknown error'}. Make sure the username is correct and you have authenticated with Twitter.`);
     } finally {
       setLoading(false);
     }
   };
 
   const mintTweet = async (tweet: Record<string, unknown>) => {
-    setMinting((tweet.id as string) || "unknown");
+    const tweetId = (tweet.id as string) || "unknown";
+    setMinting(tweetId);
     try {
+        console.log("Minting tweet:", tweet);
+        
         const blob = new Blob([JSON.stringify(tweet, null, 2)], { type: "application/json" });
         const file = new File([blob], `tweet-${tweet.id || Date.now()}.json`, { type: "application/json" });
         
+        // Fixed license terms according to Origin SDK constraints
         const license = {
-            price: 0n, 
-            duration: 0,
-            royaltyBps: 500, // 5%
+            price: 1000000000000000n, // 0.001 CAMP minimum
+            duration: 86400, // 1 day minimum (86400 seconds)
+            royaltyBps: 500, // 5% royalty (500 basis points)
             paymentToken: "0x0000000000000000000000000000000000000000" as const
         };
         
         const metadata = {
             name: `Tweet by @${username}`,
-            description: tweet.text || "A tweet on X",
-            // Assuming tweet object has text or id
+            description: (tweet.text as string) || (tweet.full_text as string) || "A tweet on X",
         };
 
         if (!auth.origin) {
@@ -100,7 +142,8 @@ export default function TweetDashboard() {
         alert(`Tweet minted successfully! Token ID: ${result}`);
     } catch (e) {
         console.error("Error minting tweet:", e);
-        alert("Failed to mint tweet.");
+        const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+        alert(`Failed to mint tweet: ${errorMessage}. Please check your wallet connection and try again.`);
     } finally {
         setMinting(null);
     }
@@ -147,10 +190,12 @@ export default function TweetDashboard() {
             <div className="grid gap-4 md:grid-cols-2">
               {tweets.map((tweet: Record<string, unknown>, i) => (
                 <div key={(tweet.id as string) || i} className="p-4 border rounded-lg border-zinc-200 hover:shadow-md transition bg-white">
-                  <p className="mb-2 text-sm text-zinc-800">{(tweet.text as string) || JSON.stringify(tweet)}</p>
+                  <p className="mb-2 text-sm text-zinc-800">
+                    {(tweet.text as string) || (tweet.full_text as string) || JSON.stringify(tweet)}
+                  </p>
                   <div className="flex justify-between items-center text-xs text-zinc-500 mt-4">
-                    <span>Likes: {Number((tweet.public_metrics as Record<string, unknown>)?.like_count || tweet.likes || 0)}</span>
-                    <span>Retweets: {Number((tweet.public_metrics as Record<string, unknown>)?.retweet_count || tweet.retweets || 0)}</span>
+                    <span>Likes: {Number((tweet.public_metrics as Record<string, unknown>)?.like_count || tweet.likes || tweet.favorite_count || 0)}</span>
+                    <span>Retweets: {Number((tweet.public_metrics as Record<string, unknown>)?.retweet_count || tweet.retweets || tweet.retweet_count || 0)}</span>
                   </div>
                   <button
                     onClick={() => mintTweet(tweet)}
@@ -162,7 +207,9 @@ export default function TweetDashboard() {
                 </div>
               ))}
               {tweets.length === 0 && !loading && username && (
-                <p className="text-center col-span-2 text-zinc-500">No tweets found or search not initiated.</p>
+                <p className="text-center col-span-2 text-zinc-500">
+                  No tweets found for @{username}. Try a different username or check if the account is public.
+                </p>
               )}
             </div>
           </div>

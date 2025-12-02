@@ -7,7 +7,6 @@ import { CampModal } from "@campnetwork/origin/react";
 import TweetDashboard from "../components/TweetDashboard";
 import BrandkitMint from "../components/BrandkitMint";
 import ChatWidget from "../components/ChatWidget";
-import Image from "next/image";
 import Link from "next/link";
 
 export default function Dashboard() {
