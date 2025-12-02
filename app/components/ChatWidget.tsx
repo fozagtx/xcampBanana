@@ -84,7 +84,7 @@ export default function ChatWidget() {
       {/* Chat Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-full shadow-2xl hover:from-yellow-700 hover:to-orange-700 transition-all duration-200 flex items-center justify-center text-white font-bold text-xl hover:scale-110"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-linear-to-r from-yellow-600 to-orange-600 rounded-full shadow-2xl hover:from-yellow-700 hover:to-orange-700 transition-all duration-200 flex items-center justify-center text-white font-bold text-xl hover:scale-110"
         aria-label="Chat with AI"
       >
         {isOpen ? "✕" : "💬"}
@@ -94,8 +94,8 @@ export default function ChatWidget() {
       {isOpen && (
         <div className="fixed bottom-24 right-6 z-50 w-96 h-[500px] bg-white rounded-2xl shadow-2xl border border-zinc-200 flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-yellow-600 to-orange-600 p-4 text-white">
-            <h3 className="font-bold text-lg">xcampBanana AI Assistant</h3>
+          <div className="bg-linear-to-r from-yellow-600 to-orange-600 p-4 text-white">
+            <h3 className="font-bold text-lg">Agent Camp</h3>
             <p className="text-sm text-yellow-100">Ask me anything!</p>
           </div>
 
@@ -109,7 +109,7 @@ export default function ChatWidget() {
                 <div
                   className={`max-w-[80%] p-3 rounded-2xl ${
                     msg.role === "user"
-                      ? "bg-gradient-to-r from-yellow-600 to-orange-600 text-white"
+                      ? "bg-linear-to-r from-yellow-600 to-orange-600 text-white"
                       : "bg-zinc-100 text-zinc-900"
                   }`}
                 >
@@ -145,13 +145,13 @@ export default function ChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Type your message..."
-                className="flex-1 px-4 py-2 border border-zinc-300 rounded-full bg-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="flex-1 px-4 py-2 border border-zinc-300 rounded-full bg-white focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black"
                 disabled={isLoading}
               />
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="px-6 py-2 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-full font-medium hover:from-yellow-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-6 py-2 bg-linear-to-r from-yellow-600 to-orange-600 text-white rounded-full font-medium hover:from-yellow-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Send
               </button>

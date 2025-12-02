@@ -47,9 +47,9 @@ export default function BrandkitMint() {
       );
 
       const license = {
-        price: 1000000000000000n, // 0.001 ETH/CAMP example
+        price: 1000000000000000n,
         duration: 0,
-        royaltyBps: 1000, // 10%
+        royaltyBps: 1000,
         paymentToken: "0x0000000000000000000000000000000000000000" as const,
       };
 
@@ -88,7 +88,7 @@ export default function BrandkitMint() {
         </h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-zinc-900">
+            <label className="block text-sm font-medium mb-1 tex-black">
               Brandkit Name
             </label>
             <input
@@ -106,7 +106,7 @@ export default function BrandkitMint() {
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full p-3 border rounded-md h-32 bg-white border-zinc-300 font-mono text-sm"
+              className="w-full p-3 border rounded-md h-32 bg-white border-zinc-300 font-mono text-sm text-black"
               placeholder='{"style": "cyberpunk", "colors": ["#ff00ff", "#00ffff"]}'
             />
             {content && !isValidJSON(content) && (
@@ -141,7 +141,7 @@ export default function BrandkitMint() {
           <button
             onClick={mintBrandkit}
             disabled={minting || !content || !name || !isValidJSON(content)}
-            className="w-full py-3 bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-medium rounded-lg hover:from-yellow-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
+            className="w-full py-3 bg-linear-to-r from-yellow-600 to-orange-600 text-white font-medium rounded-lg hover:from-yellow-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
           >
             {minting ? "Minting..." : "Mint Brandkit"}
           </button>
