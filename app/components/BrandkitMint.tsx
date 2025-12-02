@@ -13,9 +13,8 @@ export default function BrandkitMint() {
   const [name, setName] = useState("");
   const [minting, setMinting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [exportingPdf, setExportingPdf] = useState(false);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLPreElement>(null);
 
   const formatJSON = (jsonString: string) => {
     try {
@@ -124,6 +123,52 @@ export default function BrandkitMint() {
     }
   };
 
+  const exportToPDF = async () => {
+    if (!previewRef.current || !name) return;
+    
+    setExportingPdf(true);
+    try {
+      const canvas = await html2canvas(previewRef.current, {
+        backgroundColor: '#fafafa',
+        scale: 2,
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight) * 200;
+      const imgX = (pdfWidth - imgWidth * ratio / 200) / 2;
+      const imgY = 10;
+      
+      pdf.setFontSize(16);
+      pdf.text(`Brandkit: ${name}`, pdfWidth / 2, 20, { align: 'center' });
+      
+      pdf.addImage(
+        imgData,
+        'PNG',
+        imgX,
+        imgY + 10,
+        imgWidth * ratio / 200,
+        imgHeight * ratio / 200
+      );
+      
+      pdf.save(`${name.replace(/\s+/g, "-").toLowerCase()}-brandkit.pdf`);
+    } catch (e) {
+      console.error("Error exporting PDF:", e);
+      alert("Failed to export PDF.");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   if (!authenticated) {
     return null;
   }
@@ -222,12 +267,12 @@ export default function BrandkitMint() {
                 </div>
               </div>
               {showPreview && (
-                <div ref={previewRef} className="w-full p-4 border rounded-md bg-zinc-50 border-zinc-300">
-                  <h3 className="text-lg font-bold mb-2 text-zinc-900">Brandkit: {name}</h3>
-                  <pre className="font-mono text-sm overflow-x-auto max-h-64 overflow-y-auto">
-                    <code className="text-zinc-800">{formatJSON(content)}</code>
-                  </pre>
-                </div>
+                <pre 
+                  ref={previewRef}
+                  className="w-full p-4 border rounded-md bg-zinc-50 border-zinc-300 font-mono text-sm overflow-x-auto max-h-64 overflow-y-auto"
+                >
+                  <code className="text-zinc-800">{formatJSON(content)}</code>
+                </pre>
               )}
             </div>
           )}
