@@ -14,6 +14,7 @@ export default function BrandkitMint() {
   const [minting, setMinting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const previewRef = useRef<HTMLPreElement>(null);
 
   const formatJSON = (jsonString: string) => {
@@ -31,39 +32,6 @@ export default function BrandkitMint() {
       return true;
     } catch {
       return false;
-    }
-  };
-
-  const exportToPDF = async () => {
-    if (!name || !previewRef.current) return;
-    
-    setExportingPdf(true);
-    try {
-      const canvas = await html2canvas(previewRef.current, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF();
-      
-      // Add title
-      pdf.setFontSize(20);
-      pdf.text(`Brandkit: ${name}`, 20, 20);
-      
-      // Add the preview image
-      const imgWidth = 170;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 20, 30, imgWidth, imgHeight);
-      
-      // Save the PDF
-      const fileName = `${name.replace(/\s+/g, '-').toLowerCase()}-brandkit.pdf`;
-      pdf.save(fileName);
-    } catch (error) {
-      console.error('Error exporting PDF:', error);
-      alert('Failed to export PDF');
-    } finally {
-      setExportingPdf(false);
     }
   };
 
