@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/nano.jpeg" alt="xcampBanana Logo" width="200" />
+  <img src="public/nano.jpeg" alt="xcampBanana Logo" width="400" />
   <h1>xcampBanana</h1>
   <p><strong>Monetize your Content on Camp Network</strong></p>
 </div>
@@ -8,76 +8,61 @@
 
 ## About
 
-xcampBanana is a decentralized application that allows content creators to monetize their work on the Camp Network. Link your X (Twitter) account to discover your best-performing tweets and mint them as IpNFTs (Intellectual Property NFTs). Additionally, create and sell Nanabanapro Brandkit prompts.
+Decentralized app for content creators to monetize work on Camp Network. Link X account, mint tweets as IpNFTs, and sell Nanabanapro Brandkit prompts.
+
+## Architecture
+
+```mermaid
+graph TB
+    A[User Wallet] --> B[xcampBanana dApp]
+    B --> C[Camp Network SDK]
+    B --> D[X/Twitter API]
+
+    D --> E[Fetch Tweets]
+    E --> F[Tweet Analytics]
+    F --> G[Mint as IpNFT]
+
+    B --> H[Brandkit Creator]
+    H --> I[Mint Brandkit]
+
+    G --> C
+    I --> C
+    C --> J[Camp Network Blockchain]
+
+    style B fill:#f9f,stroke:#333,stroke-width:4px
+    style C fill:#bbf,stroke:#333,stroke-width:2px
+    style J fill:#bfb,stroke:#333,stroke-width:2px
+```
+
+## Quick Start
+
+```bash
+# Install
+npm install
+
+# Dev
+npm run dev
+
+# Build
+npm run build
+```
 
 ## Features
 
-- **X Account Integration** - Connect your Twitter/X account seamlessly
-- **Tweet Analytics** - View your most popular tweets with engagement metrics
-- **Mint Tweets as IpNFTs** - Convert your viral tweets into tradable digital assets
-- **Brandkit Creation** - Design and sell Nanabanapro Brandkit JSON prompts
-- **Monetization** - Set royalties and pricing for your digital content
-- **Camp Network Powered** - Built on the Camp Network infrastructure
+- X Account Integration
+- Tweet Analytics
+- Mint Tweets as IpNFTs
+- Brandkit Creation & Sales
+- Custom Royalties
+- Camp Network Powered
 
-## Getting Started
+## Tech Stack
 
-### Prerequisites
-
-- Node.js 18+ or Bun
-- A Camp Network compatible wallet
-
-### Installation
-
-```bash
-# Install dependencies
-npm install
-# or
-bun install
-```
-
-### Development
-
-```bash
-# Run development server
-npm run dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view the application.
-
-### Build
-
-```bash
-# Create production build
-npm run build
-# or
-bun run build
-```
-
-### Start Production Server
-
-```bash
-npm start
-# or
-bun start
-```
-
-## Usage
-
-1. **Connect Wallet** - Click the Camp Modal button to connect your wallet
-2. **Link X Account** - Navigate to the Twitter/X Dashboard and link your account
-3. **Fetch Tweets** - Enter your X username to retrieve your tweets
-4. **Mint as IpNFT** - Select tweets to mint as IpNFTs with custom royalties
-5. **Create Brandkits** - Design and mint Nanabanapro Brandkit prompts
-
-## Technology Stack
-
-- **Framework**: Next.js 15
-- **Styling**: Tailwind CSS 4
-- **Blockchain**: Camp Network Origin SDK
-- **State Management**: TanStack React Query
-- **Language**: TypeScript
+- Next.js 15
+- Tailwind CSS 4
+- Camp Network Origin SDK
+- TanStack React Query
+- TypeScript
 
 ## Project Structure
 
@@ -85,34 +70,36 @@ bun start
 xcamp/
 ├── app/
 │   ├── components/
-│   │   ├── TweetDashboard.tsx    # Twitter integration
-│   │   └── BrandkitMint.tsx      # Brandkit creation
-│   ├── layout.tsx                # Root layout
-│   ├── page.tsx                  # Home page
-│   └── providers.tsx             # Camp & Query providers
-├── public/
-│   └── nano.jpeg                 # Brand assets
-└── next.config.ts                # Next.js configuration
+│   │   ├── TweetDashboard.tsx
+│   │   └── BrandkitMint.tsx
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── providers.tsx
+└── public/
+    └── nano.jpeg
 ```
 
-## Configuration
+## Workflow
 
-The application uses the Camp Network Origin SDK. Configure your client ID in `app/providers.tsx`:
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant W as Wallet
+    participant A as xcampBanana
+    participant X as X/Twitter
+    participant C as Camp Network
 
-```typescript
-<CampProvider clientId="your-client-id">
+    U->>W: Connect Wallet
+    W->>A: Authenticated
+    U->>A: Link X Account
+    A->>X: Authorize
+    X->>A: Return Tweets
+    A->>U: Display Analytics
+    U->>A: Select Tweet to Mint
+    A->>C: Mint IpNFT
+    C->>A: NFT Created
+    A->>U: Success + NFT Details
 ```
-
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## Support
-
-For issues and questions:
-- Open an issue on GitHub
-- Visit [Camp Network Documentation](https://docs.camp.network)
-
 ---
 
 <div align="center">
