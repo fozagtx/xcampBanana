@@ -84,34 +84,77 @@ export default function BrandAIFlowDashboard() {
 
       if (reader) {
         console.log("Starting to read stream...")
+        let buffer = ""
+
         while (true) {
           const { done, value } = await reader.read()
           if (done) {
-            console.log("Stream reading completed")
+            console.log("Stream reading completed. Final text length:", resultText.length)
             break
           }
 
-          const chunk = decoder.decode(value)
-          const lines = chunk.split("\n")
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split("\n")
+
+          // Keep the last incomplete line in the buffer
+          buffer = lines.pop() || ""
 
           for (const line of lines) {
-            if (line.startsWith("0:")) {
+            console.log("Processing line:", line.substring(0, 100))
+
+            // Handle AI SDK v5 SSE format: lines starting with "data: "
+            if (line.startsWith("data: ")) {
+              try {
+                const jsonStr = line.slice(6) // Remove "data: " prefix
+
+                // Skip heartbeat messages
+                if (jsonStr.trim() === "[DONE]" || jsonStr.trim() === "") {
+                  continue
+                }
+
+                const parsed = JSON.parse(jsonStr)
+                console.log("Parsed message type:", parsed.type)
+
+                // Handle text delta events from AI SDK v5
+                if (parsed.type === "text-delta" && parsed.textDelta) {
+                  resultText += parsed.textDelta
+                  setResultContent(resultText)
+                  console.log("Added text delta, total length:", resultText.length)
+                }
+                // Handle legacy "0:" format for backwards compatibility
+                else if (parsed.parts && parsed.parts[0] && parsed.parts[0].text) {
+                  resultText += parsed.parts[0].text
+                  setResultContent(resultText)
+                  console.log("Added text from parts, total length:", resultText.length)
+                }
+              } catch (e) {
+                console.warn("Failed to parse stream line:", line.substring(0, 100), e)
+              }
+            }
+            // Handle old "0:" format if present
+            else if (line.startsWith("0:")) {
               try {
                 const jsonStr = line.slice(2)
                 const parsed = JSON.parse(jsonStr)
                 if (parsed.parts && parsed.parts[0] && parsed.parts[0].text) {
                   resultText += parsed.parts[0].text
                   setResultContent(resultText)
-                  console.log("Accumulated text length:", resultText.length)
+                  console.log("Added text from 0: format, total length:", resultText.length)
                 }
               } catch (e) {
-                console.warn("Failed to parse stream line:", e)
+                console.warn("Failed to parse 0: format line:", e)
               }
             }
           }
         }
       } else {
         console.error("No reader available from response body")
+        throw new Error("Unable to read response stream")
+      }
+
+      if (resultText.trim() === "") {
+        console.error("No content was extracted from the stream!")
+        throw new Error("No content was generated. This might be a parsing issue or empty response from the API.")
       }
 
       setResultContent(resultText.trim())
