@@ -5,13 +5,13 @@ export const dynamic = "force-dynamic";
 import { useAuthState } from "@campnetwork/origin/react";
 import { CampModal } from "@campnetwork/origin/react";
 import TweetManager from "../components/TweetManager";
-import BrandAIFlowDashboard from "../components/BrandAIFlowDashboard";
+import TweetFlowDashboard from "../components/TweetFlowDashboard";
 import Link from "next/link";
 import { useState } from "react";
 
 export default function Dashboard() {
   const { authenticated } = useAuthState();
-  const [activeTab, setActiveTab] = useState<"tweets" | "planner">("tweets");
+  const [activeTab, setActiveTab] = useState<"tweets" | "flow">("flow");
 
   if (!authenticated) {
     return (
@@ -43,7 +43,15 @@ export default function Dashboard() {
                 xcampBanana
               </span>
             </Link>
-            <CampModal />
+            <div className="flex items-center gap-4">
+              <Link
+                href="/brand-planner"
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 text-white font-semibold hover:opacity-90 transition-opacity"
+              >
+                🤖 AI Brand Planner
+              </Link>
+              <CampModal />
+            </div>
           </div>
         </nav>
       </div>
@@ -52,6 +60,16 @@ export default function Dashboard() {
       <div className="px-4 sm:px-6 lg:px-8 mt-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex gap-2 bg-white rounded-xl p-2 shadow-sm border border-zinc-200">
+            <button
+              onClick={() => setActiveTab("flow")}
+              className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
+                activeTab === "flow"
+                  ? "bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-md"
+                  : "text-zinc-600 hover:bg-zinc-50"
+              }`}
+            >
+              ✍️ Tweet Writer Flow
+            </button>
             <button
               onClick={() => setActiveTab("tweets")}
               className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
@@ -62,16 +80,6 @@ export default function Dashboard() {
             >
               📊 Top Performing Tweets
             </button>
-            <button
-              onClick={() => setActiveTab("planner")}
-              className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
-                activeTab === "planner"
-                  ? "bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-md"
-                  : "text-zinc-600 hover:bg-zinc-50"
-              }`}
-            >
-              🤖 AI Brand Planner
-            </button>
           </div>
         </div>
       </div>
@@ -79,13 +87,13 @@ export default function Dashboard() {
       {/* Content Section */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {activeTab === "tweets" ? (
-            <div className="bg-white rounded-2xl shadow-xl border border-zinc-200 p-8">
-              <TweetManager />
+          {activeTab === "flow" ? (
+            <div className="rounded-2xl shadow-xl border border-zinc-200 overflow-hidden" style={{ height: "calc(100vh - 280px)" }}>
+              <TweetFlowDashboard />
             </div>
           ) : (
-            <div className="rounded-2xl shadow-xl border border-zinc-200 overflow-hidden" style={{ height: "calc(100vh - 280px)" }}>
-              <BrandAIFlowDashboard />
+            <div className="bg-white rounded-2xl shadow-xl border border-zinc-200 p-8">
+              <TweetManager />
             </div>
           )}
         </div>
