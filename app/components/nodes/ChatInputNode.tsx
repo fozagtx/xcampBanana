@@ -1,7 +1,6 @@
 "use client"
 
 import { memo } from "react"
-import { Handle, Position, Node } from "@xyflow/react"
 import { Button } from "@/components/ui/button"
 import { ArrowUp } from "lucide-react"
 
@@ -12,13 +11,9 @@ export interface ChatInputNodeData extends Record<string, unknown> {
   disabled?: boolean
 }
 
-export type ChatInputNodeType = Node<ChatInputNodeData, "chatInput">
-
 const ChatInputNode = memo(({ data }: { data: ChatInputNodeData }) => {
   return (
     <div className="rounded-xl border-2 border-purple-400 bg-white shadow-xl p-4 min-w-[400px]">
-      <Handle type="source" position={Position.Right} className="!bg-purple-500" />
-
       <div className="mb-2">
         <h3 className="text-sm font-semibold text-purple-700">Your Message</h3>
       </div>

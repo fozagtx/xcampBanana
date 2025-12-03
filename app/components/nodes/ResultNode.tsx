@@ -1,37 +1,43 @@
 "use client"
 
 import { memo } from "react"
-import { Handle, Position, Node } from "@xyflow/react"
 import { Button } from "@/components/ui/button"
 import { Download, Wallet, Loader2, CheckCircle, FileText } from "lucide-react"
 
 export interface ResultNodeData extends Record<string, unknown> {
-  content: string
-  isLoading: boolean
+  content?: string
+  isLoading?: boolean
   selectedAction?: string | null
-  onExportPDF: () => void
-  onMintNFT: () => void
-  isExporting: boolean
-  authenticated: boolean
+  onExportPDF?: () => void
+  onMintNFT?: () => void
+  isExporting?: boolean
+  authenticated?: boolean
+  useCaseTitle?: string
 }
 
-export type ResultNodeType = Node<ResultNodeData, "result">
-
 const ResultNode = memo(({ data }: { data: ResultNodeData }) => {
-  return (
-    <div className="rounded-xl border-2 border-green-400 bg-gradient-to-br from-green-50 via-white to-emerald-50 shadow-xl p-6 min-w-[450px]">
-      <Handle type="target" position={Position.Left} className="!bg-green-500" />
+  // Determine which dashboard mode we're in
+  const isBrandDashboard = data.selectedAction !== undefined
+  const isTweetDashboard = data.useCaseTitle !== undefined
 
+  const getTitle = () => {
+    if (isBrandDashboard) {
+      return data.selectedAction === "image-prompt"
+        ? "AI Image Prompt Generated"
+        : "Brand Case Study Generated"
+    }
+    return data.useCaseTitle || "Generated Result"
+  }
+
+  return (
+    <div className="rounded-xl border-2 border-green-400 bg-gradient-to-br from-green-50 via-white to-emerald-50 shadow-xl p-6 min-w-[450px] h-full">
       <div className="space-y-4">
         <div className="text-center">
           <h3 className="text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
             Generated Result
           </h3>
           <p className="text-xs text-gray-600 mt-1">
-            {data.selectedAction === "image-prompt" 
-              ? "AI Image Prompt Generated"
-              : "Brand Case Study Generated"
-            }
+            {getTitle()}
           </p>
         </div>
 
@@ -62,57 +68,80 @@ const ResultNode = memo(({ data }: { data: ResultNodeData }) => {
 
         {data.content && !data.isLoading && (
           <div className="space-y-3">
-            <div className="flex gap-2">
-              <Button
-                onClick={data.onExportPDF}
-                disabled={data.isExporting}
-                variant="outline"
-                size="sm"
-                className="flex-1 border-green-200 hover:border-green-400 hover:bg-green-50"
-              >
-                {data.isExporting ? (
-                  <>
-                    <Loader2 size={14} className="mr-2 animate-spin" />
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <Download size={14} className="mr-2" />
-                    Export PDF
-                  </>
-                )}
-              </Button>
+            {isBrandDashboard && data.onExportPDF && data.onMintNFT && (
+              <>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={data.onExportPDF}
+                    disabled={data.isExporting}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 border-green-200 hover:border-green-400 hover:bg-green-50"
+                  >
+                    {data.isExporting ? (
+                      <>
+                        <Loader2 size={14} className="mr-2 animate-spin" />
+                        Exporting...
+                      </>
+                    ) : (
+                      <>
+                        <Download size={14} className="mr-2" />
+                        Export PDF
+                      </>
+                    )}
+                  </Button>
 
-              <Button
-                onClick={data.onMintNFT}
-                size="sm"
-                className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
-              >
-                {data.authenticated ? (
-                  <>
-                    <CheckCircle size={14} className="mr-2" />
-                    MY ORIGIN
-                  </>
-                ) : (
-                  <>
-                    <Wallet size={14} className="mr-2" />
-                    MY ORIGIN
-                  </>
-                )}
-              </Button>
-            </div>
+                  <Button
+                    onClick={data.onMintNFT}
+                    size="sm"
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
+                  >
+                    {data.authenticated ? (
+                      <>
+                        <CheckCircle size={14} className="mr-2" />
+                        MY ORIGIN
+                      </>
+                    ) : (
+                      <>
+                        <Wallet size={14} className="mr-2" />
+                        MY ORIGIN
+                      </>
+                    )}
+                  </Button>
+                </div>
 
-            <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-              <p className="text-xs text-green-700">
-                ✓ Content ready for export and minting
-              </p>
-              <p className="text-xs text-gray-600 mt-1">
-                {data.authenticated 
-                  ? "Connect with MY ORIGIN to mint as NFT"
-                  : "Click MY ORIGIN to connect wallet and mint"
-                }
-              </p>
-            </div>
+                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-xs text-green-700">
+                    ✓ Content ready for export and minting
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {data.authenticated
+                      ? "Connect with MY ORIGIN to mint as NFT"
+                      : "Click MY ORIGIN to connect wallet and mint"
+                    }
+                  </p>
+                </div>
+              </>
+            )}
+
+            {isTweetDashboard && data.onMintNFT && (
+              <>
+                <Button
+                  onClick={data.onMintNFT}
+                  size="sm"
+                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
+                >
+                  <Wallet size={14} className="mr-2" />
+                  Mint as NFT
+                </Button>
+
+                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-xs text-green-700">
+                    ✓ Content ready for minting
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

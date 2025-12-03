@@ -1,7 +1,6 @@
 "use client"
 
 import { memo } from "react"
-import { Handle, Position, Node } from "@xyflow/react"
 import { MessageContent } from "@/components/prompt-kit/message"
 import { Button } from "@/components/ui/button"
 import { Copy, ThumbsUp, ThumbsDown } from "lucide-react"
@@ -12,8 +11,6 @@ export interface ChatMessageNodeData extends Record<string, unknown> {
   content: string
   isLoading?: boolean
 }
-
-export type ChatMessageNodeType = Node<ChatMessageNodeData, "chatMessage">
 
 const ChatMessageNode = memo(({ data }: { data: ChatMessageNodeData }) => {
   const isAssistant = data.role === "assistant"
@@ -30,17 +27,6 @@ const ChatMessageNode = memo(({ data }: { data: ChatMessageNodeData }) => {
           : "border-blue-400 bg-gradient-to-br from-blue-50 to-white"
       }`}
     >
-      <Handle
-        type="target"
-        position={Position.Left}
-        className={isAssistant ? "!bg-green-500" : "!bg-blue-500"}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        className={isAssistant ? "!bg-green-500" : "!bg-blue-500"}
-      />
-
       <div className="mb-2 flex items-center justify-between">
         <h3
           className={`text-sm font-semibold ${
