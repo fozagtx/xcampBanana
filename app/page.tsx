@@ -3,7 +3,6 @@
 export const dynamic = "force-dynamic";
 import { CampModal } from "@campnetwork/origin/react";
 import { useAuthState } from "@campnetwork/origin/react";
-import ChatWidget from "./components/ChatWidget";
 import Link from "next/link";
 
 export default function Home() {
@@ -41,13 +40,12 @@ export default function Home() {
           <div className="text-center">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6">
               <span className="bg-linear-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent">
-                Value Your Content
+                Build Your Brand
               </span>
             </h1>
 
             <p className="text-xl sm:text-2xl text-zinc-600 max-w-3xl mx-auto leading-relaxed">
-              Create unique Nanabanapro Brandkit prompts and monetize your digital
-              content on Camp Network
+              Track your top tweets, generate viral content strategies, and create AI image prompts with your personal brand kit planner
             </p>
           </div>
         </div>
@@ -82,37 +80,37 @@ export default function Home() {
               Powerful Features
             </h2>
             <p className="text-lg text-zinc-600">
-              Everything you need to monetize your digital content
+              Everything you need to build and grow your brand
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                title: "Brandkit Creation",
+                title: "Tweet Performance Tracking",
                 description:
-                  "Design and sell Nanabanapro Brandkit JSON prompts",
+                  "Add and track your top-performing tweets with detailed metrics",
               },
               {
-                title: "PDF Export & Upload",
+                title: "PDF Export",
                 description:
-                  "Export your brandkits as PDFs and upload them directly",
+                  "Export your tweet collections and AI insights to professional PDFs",
               },
               {
-                title: "Custom Royalties",
-                description: "Set your own pricing and royalty percentages",
+                title: "AI Brand Planner",
+                description: "Get personalized brand strategies and viral content insights",
               },
               {
-                title: "AI Assistant",
-                description: "Get help with our built-in AI chat assistant",
+                title: "Case Study Generation",
+                description: "Generate detailed brand case studies with actionable strategies",
               },
               {
-                title: "Camp Network",
-                description: "Built on secure, decentralized infrastructure",
+                title: "Image Prompt Creator",
+                description: "Create JSON context prompts for AI image generation tools",
               },
               {
-                title: "Easy Monetization",
-                description: "Turn your creative content into valuable digital assets",
+                title: "Web Search Integration",
+                description: "Real-time trend analysis with Brave Search API",
               },
             ].map((feature, index) => (
               <div
@@ -135,19 +133,15 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-linear-to-r from-yellow-600 to-orange-600 rounded-3xl p-12 shadow-2xl">
             <h2 className="text-4xl font-bold text-white mb-4">
-              Ready to Start Earning?
+              Ready to Build Your Brand?
             </h2>
             <p className="text-xl text-yellow-100 mb-8">
-              Join xcampBanana today and turn your content into valuable digital
-              assets
+              Join xcampBanana today and unlock AI-powered brand growth tools
             </p>
             <CampModal />
           </div>
         </div>
       </section>
-
-      {/* AI Chat Widget */}
-      <ChatWidget />
 
       {/* Footer */}
       <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-zinc-200">
