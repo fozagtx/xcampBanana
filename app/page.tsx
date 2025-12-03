@@ -55,7 +55,7 @@ export default function Home() {
             </h1>
 
             <p className="text-xl sm:text-2xl text-zinc-600 max-w-3xl mx-auto leading-relaxed">
-              Track your top tweets, generate viral content strategies, and create AI image prompts with your personal brand kit planner
+              Monetize your content, strategies, and prompts with your personal brand kit planner
             </p>
           </div>
         </div>
