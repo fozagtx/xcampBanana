@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 
 import { useAuthState } from "@campnetwork/origin/react";
 import { CampModal } from "@campnetwork/origin/react";
-import TweetDashboard from "../components/TweetDashboard";
 import BrandkitMint from "../components/BrandkitMint";
 import ChatWidget from "../components/ChatWidget";
 import Link from "next/link";
@@ -46,21 +45,6 @@ export default function Dashboard() {
           </div>
         </nav>
       </div>
-
-      {/* Tweet Dashboard Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4 text-zinc-900">
-              Your Tweet Dashboard
-            </h2>
-            <p className="text-lg text-zinc-600">
-              Connect and monetize your best performing tweets
-            </p>
-          </div>
-          <TweetDashboard />
-        </div>
-      </section>
 
       {/* Brandkit Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-50 to-orange-50">

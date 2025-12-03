@@ -15,7 +15,7 @@ export default function ChatWidget() {
     {
       role: "assistant",
       content:
-        "Hi! , youre in front of An agent,Ask me anything about monetizing your tweets or creating Brandkit prompts!",
+        "Hi! , youre in front of An agent,Ask me anything about creating Brandkit prompts or monetizing your content!",
     },
   ]);
   const [input, setInput] = useState("");

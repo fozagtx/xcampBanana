@@ -46,8 +46,8 @@ export default function Home() {
             </h1>
 
             <p className="text-xl sm:text-2xl text-zinc-600 max-w-3xl mx-auto leading-relaxed">
-              Transform your viral tweets into valuable IpNFTs and create unique
-              Nanabanapro Brandkit prompts on Camp Network
+              Create unique Nanabanapro Brandkit prompts and monetize your digital
+              content on Camp Network
             </p>
           </div>
         </div>
@@ -89,32 +89,30 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                title: "X Integration",
-                description:
-                  "Seamlessly connect your X (Twitter) account and import your content",
-              },
-              {
-                title: "Tweet Analytics",
-                description:
-                  "View engagement metrics to identify your most valuable content",
-              },
-              {
-                title: "Mint as IpNFTs",
-                description:
-                  "Convert your viral tweets into tradable intellectual property",
-              },
-              {
                 title: "Brandkit Creation",
                 description:
                   "Design and sell Nanabanapro Brandkit JSON prompts",
+              },
+              {
+                title: "PDF Export & Upload",
+                description:
+                  "Export your brandkits as PDFs and upload them directly",
               },
               {
                 title: "Custom Royalties",
                 description: "Set your own pricing and royalty percentages",
               },
               {
+                title: "AI Assistant",
+                description: "Get help with our built-in AI chat assistant",
+              },
+              {
                 title: "Camp Network",
                 description: "Built on secure, decentralized infrastructure",
+              },
+              {
+                title: "Easy Monetization",
+                description: "Turn your creative content into valuable digital assets",
               },
             ].map((feature, index) => (
               <div

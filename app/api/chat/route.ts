@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant for xcampBanana, a platform that helps content creators monetize their tweets as IpNFTs and create Nanabanapro Brandkit prompts on Camp Network. Be concise and helpful.'
+            content: 'You are a helpful assistant for xcampBanana, a platform that helps content creators create Nanabanapro Brandkit prompts and monetize their content on Camp Network. Be concise and helpful.'
           },
           {
             role: 'user',
