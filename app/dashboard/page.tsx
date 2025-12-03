@@ -5,11 +5,14 @@ export const dynamic = "force-dynamic";
 import { useAuthState } from "@campnetwork/origin/react";
 import { CampModal } from "@campnetwork/origin/react";
 import BrandkitMint from "../components/BrandkitMint";
+import Marketplace from "../components/Marketplace";
 import ChatWidget from "../components/ChatWidget";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function Dashboard() {
   const { authenticated } = useAuthState();
+  const [activeTab, setActiveTab] = useState<"create" | "marketplace">("create");
 
   if (!authenticated) {
     return (
@@ -31,7 +34,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
       {/* Navigation */}
       <div className="pt-8 pb-4 px-4 sm:px-6 lg:px-8">
-        <nav className="max-w-5xl mx-auto bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-zinc-200 px-6 py-4">
+        <nav className="max-w-7xl mx-auto bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-zinc-200 px-6 py-4">
           <div className="flex justify-between items-center">
             <Link
               href="/"
@@ -46,18 +49,62 @@ export default function Dashboard() {
         </nav>
       </div>
 
-      {/* Brandkit Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-50 to-orange-50">
+      {/* Tab Navigation */}
+      <div className="px-4 sm:px-6 lg:px-8 mt-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4 text-zinc-900">
-              Nanabanapro Brandkit
-            </h2>
-            <p className="text-lg text-zinc-600">
-              Create and sell custom brandkit prompts
-            </p>
+          <div className="flex gap-2 bg-white rounded-xl p-2 shadow-sm border border-zinc-200">
+            <button
+              onClick={() => setActiveTab("create")}
+              className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
+                activeTab === "create"
+                  ? "bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-md"
+                  : "text-zinc-600 hover:bg-zinc-50"
+              }`}
+            >
+              🎨 Create Brandkit
+            </button>
+            <button
+              onClick={() => setActiveTab("marketplace")}
+              className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
+                activeTab === "marketplace"
+                  ? "bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-md"
+                  : "text-zinc-600 hover:bg-zinc-50"
+              }`}
+            >
+              🛒 Marketplace
+            </button>
           </div>
-          <BrandkitMint />
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {activeTab === "create" ? (
+            <div>
+              <div className="text-center mb-12">
+                <h2 className="text-4xl font-bold mb-4 text-zinc-900">
+                  Create Nanabanapro Brandkit
+                </h2>
+                <p className="text-lg text-zinc-600">
+                  Create and mint custom brandkit prompts with full control over pricing
+                </p>
+              </div>
+              <BrandkitMint />
+            </div>
+          ) : (
+            <div>
+              <div className="text-center mb-12">
+                <h2 className="text-4xl font-bold mb-4 text-zinc-900">
+                  Browse Marketplace
+                </h2>
+                <p className="text-lg text-zinc-600">
+                  Discover and purchase brandkit prompts from creators
+                </p>
+              </div>
+              <Marketplace />
+            </div>
+          )}
         </div>
       </section>
 
