@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useAuthState } from "@campnetwork/origin/react";
 import { CampModal } from "@campnetwork/origin/react";
 import TweetManager from "../components/TweetManager";
-import AIBrandPlanner from "../components/AIBrandPlanner";
+import BrandAIFlowDashboard from "../components/BrandAIFlowDashboard";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -84,8 +84,8 @@ export default function Dashboard() {
               <TweetManager />
             </div>
           ) : (
-            <div className="bg-white rounded-2xl shadow-xl border border-zinc-200 overflow-hidden" style={{ height: "calc(100vh - 280px)" }}>
-              <AIBrandPlanner />
+            <div className="rounded-2xl shadow-xl border border-zinc-200 overflow-hidden" style={{ height: "calc(100vh - 280px)" }}>
+              <BrandAIFlowDashboard />
             </div>
           )}
         </div>
