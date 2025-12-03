@@ -40,7 +40,10 @@ export default function BrandkitMint() {
   };
 
   const mintBrandkit = async () => {
-    if ((!content && !pdfFile) || !name) return;
+    if ((!content && !pdfFile) || !name) {
+      alert("Please provide a name and either upload a file or enter JSON content.");
+      return;
+    }
 
     // Validate pricing parameters
     const priceFloat = parseFloat(price);
@@ -60,6 +63,29 @@ export default function BrandkitMint() {
     if (isNaN(royaltyPercent) || royaltyPercent < 0 || royaltyPercent > 100) {
       alert("Royalty must be between 0% and 100%");
       return;
+    }
+
+    // Validate file type if file is uploaded
+    if (pdfFile) {
+      const allowedTypes = [
+        'application/pdf',
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+        'video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska',
+        'audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/ogg'
+      ];
+
+      if (!allowedTypes.includes(pdfFile.type)) {
+        alert(`Unsupported file type: ${pdfFile.type}\n\nPlease upload an image, video, audio file, or PDF.`);
+        return;
+      }
+
+      // Check file size (max 100MB for most files, 500MB for videos)
+      const maxSize = pdfFile.type.startsWith('video/') ? 500 * 1024 * 1024 : 100 * 1024 * 1024;
+      if (pdfFile.size > maxSize) {
+        const maxSizeMB = maxSize / (1024 * 1024);
+        alert(`File size exceeds the maximum allowed size of ${maxSizeMB}MB.\n\nYour file: ${(pdfFile.size / (1024 * 1024)).toFixed(2)}MB`);
+        return;
+      }
     }
 
     setMinting(true);
@@ -101,9 +127,18 @@ export default function BrandkitMint() {
         paymentToken: "0x0000000000000000000000000000000000000000" as const,
       };
 
+      // Determine file type for description
+      const fileType = pdfFile
+        ? pdfFile.type.startsWith('image/') ? 'Image'
+        : pdfFile.type.startsWith('video/') ? 'Video'
+        : pdfFile.type.startsWith('audio/') ? 'Audio'
+        : pdfFile.type === 'application/pdf' ? 'PDF'
+        : 'File'
+        : 'JSON Prompt';
+
       const metadata = {
         name: `Brandkit: ${name}`,
-        description: pdfFile ? "Nanabanapro Brandkit PDF" : "Nanabanapro Brandkit JSON Prompt",
+        description: `Nanabanapro Brandkit ${fileType}`,
         price: priceFloat,
         duration: durationDays,
         royalty: royaltyPercent,
@@ -138,7 +173,25 @@ export default function BrandkitMint() {
       setParentId("");
     } catch (e) {
       console.error("Error minting brandkit:", e);
-      alert(`Failed to mint brandkit: ${e instanceof Error ? e.message : "Unknown error"}\n\nPlease check all parameters and try again.`);
+
+      // Provide more helpful error messages
+      let errorMessage = "Failed to mint brandkit.";
+
+      if (e instanceof Error) {
+        if (e.message.includes("unauthorized") || e.message.includes("authorization")) {
+          errorMessage = "Authorization failed. Please ensure:\n\n1. You are connected to the correct wallet\n2. Your wallet has sufficient funds\n3. The CAMP_CLIENT_ID environment variable is properly configured\n4. Try disconnecting and reconnecting your wallet";
+        } else if (e.message.includes("network") || e.message.includes("connection")) {
+          errorMessage = "Network error. Please check your internet connection and try again.";
+        } else if (e.message.includes("rejected") || e.message.includes("denied")) {
+          errorMessage = "Transaction was rejected. Please try again and confirm the transaction in your wallet.";
+        } else if (e.message.includes("insufficient")) {
+          errorMessage = "Insufficient funds. Please ensure your wallet has enough balance for gas fees.";
+        } else {
+          errorMessage = `Error: ${e.message}\n\nPlease check all parameters and try again.`;
+        }
+      }
+
+      alert(errorMessage);
     } finally {
       setMinting(false);
     }
@@ -369,29 +422,32 @@ export default function BrandkitMint() {
           
           <div>
             <label className="block text-sm font-medium mb-1 text-zinc-900">
-              Upload PDF (Optional) or Create JSON Content Below
+              Upload File (Optional) or Create JSON Content Below
             </label>
             <input
               type="file"
-              accept=".pdf"
+              accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.avi,.mkv,.mp3,.wav,.m4a,.ogg"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) {
                   setPdfFile(file);
-                  setContent(""); // Clear JSON content when PDF is uploaded
+                  setContent(""); // Clear JSON content when file is uploaded
                 }
               }}
               className="w-full p-3 border rounded-md bg-white border-zinc-300 text-black"
             />
+            <p className="text-xs text-zinc-500 mt-1">
+              Supported formats: Images (JPG, PNG, GIF, WebP), Videos (MP4, MOV, AVI, MKV), Audio (MP3, WAV, M4A, OGG), PDF
+            </p>
             {pdfFile && (
               <div className="mt-2 flex items-center justify-between">
-                <span className="text-sm text-zinc-600">PDF: {pdfFile.name}</span>
+                <span className="text-sm text-zinc-600">File: {pdfFile.name}</span>
                 <button
                   type="button"
                   onClick={() => setPdfFile(null)}
                   className="text-sm text-red-600 hover:text-red-700"
                 >
-                  Remove PDF
+                  Remove File
                 </button>
               </div>
             )}
@@ -480,7 +536,7 @@ export default function BrandkitMint() {
             disabled={minting || (!content && !pdfFile) || !name || (content !== "" && !isValidJSON(content))}
             className="w-full py-3 bg-linear-to-r from-yellow-600 to-orange-600 text-white font-medium rounded-lg hover:from-yellow-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
           >
-            {minting ? "Minting..." : `Mint Brandkit ${pdfFile ? "(PDF)" : "(JSON)"}`}
+            {minting ? "Minting..." : `Mint Brandkit ${pdfFile ? `(${pdfFile.name.split('.').pop()?.toUpperCase()})` : "(JSON)"}`}
           </button>
         </div>
       </div>
