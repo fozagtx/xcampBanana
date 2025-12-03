@@ -436,7 +436,7 @@ Return a well-formatted JSON object.`,
 
         pdf.setFontSize(10)
         pdf.setFont("helvetica", "normal")
-        const contentLines = pdf.splitTextToSize(node.data.content, contentWidth)
+        const contentLines = pdf.splitTextToSize(String(node.data.content || ""), contentWidth)
         pdf.text(contentLines, margin, yPosition)
         yPosition += contentLines.length * 6 + 15
       }
