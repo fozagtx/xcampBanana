@@ -1,20 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
-import {
-  ReactFlow,
-  Background,
-  Controls,
-  MiniMap,
-  Node,
-  Edge,
-  addEdge,
-  Connection,
-  useNodesState,
-  useEdgesState,
-  BackgroundVariant,
-} from "@xyflow/react"
-import "@xyflow/react/dist/style.css"
+import { useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Download, Maximize2, Minimize2 } from "lucide-react"
 import jsPDF from "jspdf"
@@ -25,13 +11,6 @@ import TextInputNode from "./nodes/TextInputNode"
 import ResultNode from "./nodes/ResultNode"
 import HelpNode from "./nodes/HelpNode"
 
-const nodeTypes = {
-  placeholder: PlaceholderNode,
-  textInput: TextInputNode,
-  result: ResultNode,
-  help: HelpNode,
-}
-
 export default function BrandAIFlowDashboard() {
   const [selectedAction, setSelectedAction] = useState<string | null>(null)
   const [inputText, setInputText] = useState("")
@@ -40,7 +19,7 @@ export default function BrandAIFlowDashboard() {
   const [isExporting, setIsExporting] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
-  
+
   const { authenticated } = useAuthState()
   const auth = useAuth()
 
@@ -154,7 +133,7 @@ export default function BrandAIFlowDashboard() {
       // Create a text file from the content
       const fileName = selectedAction === "image-prompt" ? "ai-image-prompt" : "brand-case-study"
       const contentName = selectedAction === "image-prompt" ? "AI Image Prompt" : "Brand Case Study"
-      
+
       const fileContent = JSON.stringify({
         type: contentName,
         content: resultContent,
@@ -182,7 +161,7 @@ export default function BrandAIFlowDashboard() {
       }
 
       const result = await auth.origin.mintFile(file, metadata, license)
-      
+
       alert(`Successfully minted! Token ID: ${result}\n\nPrice: 0.001 CAMP\nDuration: 1 day\nRoyalty: 10%`)
     } catch (error) {
       console.error("Minting error:", error)
@@ -263,184 +242,11 @@ export default function BrandAIFlowDashboard() {
     }
   }, [resultContent, selectedAction])
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([
-    {
-      id: "placeholder",
-      type: "placeholder",
-      position: { x: 50, y: 200 },
-      data: {
-        onSelectAction: handleSelectAction,
-        selectedAction: null,
-        onToggleHelp: handleToggleHelp,
-      },
-    },
-    {
-      id: "text-input",
-      type: "textInput",
-      position: { x: 450, y: 200 },
-      data: {
-        value: inputText,
-        onChange: setInputText,
-        onSubmit: handleSubmit,
-        disabled: !selectedAction || isProcessing,
-        isLoading: isProcessing,
-        selectedAction,
-      },
-    },
-    {
-      id: "result",
-      type: "result",
-      position: { x: 850, y: 200 },
-      data: {
-        content: resultContent,
-        isLoading: isProcessing,
-        selectedAction,
-        onExportPDF: exportToPDF,
-        onMintNFT: handleMintNFT,
-        isExporting,
-        authenticated,
-      },
-    },
-  ])
-
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([
-    {
-      id: "placeholder-input",
-      source: "placeholder",
-      target: "text-input",
-      animated: !!selectedAction,
-      style: { stroke: "#f97316", strokeWidth: 2 },
-    },
-    {
-      id: "input-result",
-      source: "text-input",
-      target: "result",
-      animated: isProcessing,
-      style: { stroke: "#8b5cf6", strokeWidth: 2 },
-    },
-  ])
-
-  // Add help node when showHelp is true
-  useEffect(() => {
-    if (showHelp) {
-      const helpNode: Node = {
-        id: "help",
-        type: "help",
-        position: { x: 50, y: 450 },
-        data: {
-          onClose: handleCloseHelp,
-        },
-      }
-
-      setNodes((prev) => {
-        // Check if help node already exists to avoid duplicate adds
-        if (prev.some((node) => node.id === "help")) {
-          return prev
-        }
-        return [...prev, helpNode]
-      })
-
-      // Add edge from placeholder to help
-      setEdges((prev) => {
-        // Check if edge already exists to avoid duplicate adds
-        if (prev.some((edge) => edge.id === "placeholder-help")) {
-          return prev
-        }
-        return [
-          ...prev,
-          {
-            id: "placeholder-help",
-            source: "placeholder",
-            target: "help",
-            animated: true,
-            style: { stroke: "#22c55e", strokeWidth: 2 },
-          },
-        ]
-      })
-    } else {
-      setNodes((prev) => prev.filter((node) => node.id !== "help"))
-      setEdges((prev) => prev.filter((edge) => edge.id !== "placeholder-help"))
-    }
-  }, [showHelp, handleCloseHelp])
-
-  // Update nodes when state changes
-  useEffect(() => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === "placeholder") {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              onSelectAction: handleSelectAction,
-              selectedAction,
-              onToggleHelp: handleToggleHelp,
-            },
-          }
-        }
-        if (node.id === "text-input") {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              value: inputText,
-              onChange: setInputText,
-              onSubmit: handleSubmit,
-              disabled: !selectedAction || isProcessing,
-              isLoading: isProcessing,
-              selectedAction,
-            },
-          }
-        }
-        if (node.id === "result") {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              content: resultContent,
-              isLoading: isProcessing,
-              selectedAction,
-              onExportPDF: exportToPDF,
-              onMintNFT: handleMintNFT,
-              isExporting,
-              authenticated,
-            },
-          }
-        }
-        return node
-      })
-    )
-
-    // Update edge animation
-    setEdges((eds) =>
-      eds.map((edge) => {
-        if (edge.id === "placeholder-input") {
-          return {
-            ...edge,
-            animated: !!selectedAction,
-          }
-        }
-        if (edge.id === "input-result") {
-          return {
-            ...edge,
-            animated: isProcessing,
-          }
-        }
-        return edge
-      })
-    )
-  }, [selectedAction, inputText, resultContent, isProcessing, isExporting, authenticated, handleSelectAction, handleSubmit, exportToPDF, handleMintNFT, handleToggleHelp])
-
-  const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  )
-
   return (
     <div
       className={`relative ${
         isFullscreen ? "fixed inset-0 z-50" : "w-full h-full"
-      } bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50`}
+      } bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 overflow-auto`}
     >
       {/* Header Controls */}
       <div className="absolute top-4 right-4 z-10 flex gap-2">
@@ -470,28 +276,62 @@ export default function BrandAIFlowDashboard() {
         </Button>
       </div>
 
-      {/* React Flow Canvas */}
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        minZoom={0.3}
-        maxZoom={1.5}
-      >
-        <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-        <Controls />
-        <MiniMap
-          nodeStrokeWidth={3}
-          zoomable
-          pannable
-          className="bg-white/80 backdrop-blur-sm"
-        />
-      </ReactFlow>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto p-8 pt-20">
+        {/* Card Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Action Selection Card */}
+          <div className="lg:col-span-1">
+            <PlaceholderNode
+              data={{
+                onSelectAction: handleSelectAction,
+                selectedAction: selectedAction,
+                onToggleHelp: handleToggleHelp,
+              }}
+            />
+          </div>
+
+          {/* Text Input Card */}
+          <div className="lg:col-span-1">
+            <TextInputNode
+              data={{
+                value: inputText,
+                onChange: setInputText,
+                onSubmit: handleSubmit,
+                disabled: !selectedAction || isProcessing,
+                isLoading: isProcessing,
+                selectedAction,
+              }}
+            />
+          </div>
+
+          {/* Result Card */}
+          <div className="lg:col-span-1">
+            <ResultNode
+              data={{
+                content: resultContent,
+                isLoading: isProcessing,
+                selectedAction,
+                onExportPDF: exportToPDF,
+                onMintNFT: handleMintNFT,
+                isExporting,
+                authenticated,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Help Card (appears below when toggled) */}
+        {showHelp && (
+          <div className="mt-6">
+            <HelpNode
+              data={{
+                onClose: handleCloseHelp,
+              }}
+            />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

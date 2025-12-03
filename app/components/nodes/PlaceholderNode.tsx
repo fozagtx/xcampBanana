@@ -1,7 +1,6 @@
 "use client"
 
 import { memo } from "react"
-import { Handle, Position, Node } from "@xyflow/react"
 import { Button } from "@/components/ui/button"
 import { Image as ImageIcon, FileText, HelpCircle } from "lucide-react"
 
@@ -11,13 +10,9 @@ export interface PlaceholderNodeData extends Record<string, unknown> {
   onToggleHelp: () => void
 }
 
-export type PlaceholderNodeType = Node<PlaceholderNodeData, "placeholder">
-
 const PlaceholderNode = memo(({ data }: { data: PlaceholderNodeData }) => {
   return (
-    <div className="rounded-xl border-2 border-orange-400 bg-gradient-to-br from-orange-50 via-white to-yellow-50 shadow-xl p-6 min-w-[380px]">
-      <Handle type="source" position={Position.Right} className="!bg-orange-500" />
-
+    <div className="rounded-xl border-2 border-orange-400 bg-gradient-to-br from-orange-50 via-white to-yellow-50 shadow-xl p-6 min-w-[380px] h-full">
       <div className="text-center space-y-4">
         <h2 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-yellow-600 bg-clip-text text-transparent">
           🎨 AI Brand Kit
@@ -78,7 +73,7 @@ const PlaceholderNode = memo(({ data }: { data: PlaceholderNodeData }) => {
               ✓ {data.selectedAction === "image-prompt" ? "AI Image Prompt" : "Brand Case Study"} selected
             </p>
             <p className="text-xs text-gray-600 mt-1">
-              Now add your input in the next node →
+              Now add your input in the next card →
             </p>
           </div>
         )}

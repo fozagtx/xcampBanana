@@ -1,7 +1,6 @@
 "use client"
 
 import { memo } from "react"
-import { Handle, Position, Node } from "@xyflow/react"
 import { Button } from "@/components/ui/button"
 import {
   FileText,
@@ -22,8 +21,6 @@ export interface UseCaseNodeData extends Record<string, unknown> {
   }) => void
   selectedUseCase?: string
 }
-
-export type UseCaseNodeType = Node<UseCaseNodeData, "useCase">
 
 const USE_CASES = [
   {
@@ -84,9 +81,7 @@ const IconComponent = ({ iconName }: { iconName: string }) => {
 
 const UseCaseNode = memo(({ data }: { data: UseCaseNodeData }) => {
   return (
-    <div className="rounded-xl border-2 border-orange-400 bg-gradient-to-br from-orange-50 via-white to-yellow-50 shadow-xl p-6 min-w-[420px]">
-      <Handle type="source" position={Position.Right} className="!bg-orange-500" />
-
+    <div className="rounded-xl border-2 border-orange-400 bg-gradient-to-br from-orange-50 via-white to-yellow-50 shadow-xl p-6 min-w-[420px] h-full">
       <div className="text-center mb-4">
         <h2 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-yellow-600 bg-clip-text text-transparent">
           Select AI Agent Action

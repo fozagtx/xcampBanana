@@ -1,6 +1,5 @@
 "use client"
 
-import { Handle, Position } from "@xyflow/react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sparkles, Copy, Check } from "lucide-react"
@@ -41,8 +40,6 @@ export default function TweetWriterNode({
 
   return (
     <div className="bg-white rounded-xl shadow-2xl border-2 border-blue-400 p-6 min-w-[350px] max-w-[450px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3" />
-
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="text-blue-600" size={20} />
@@ -124,8 +121,6 @@ export default function TweetWriterNode({
           </div>
         )}
       </div>
-
-      <Handle type="source" position={Position.Right} className="w-3 h-3" />
     </div>
   )
 }

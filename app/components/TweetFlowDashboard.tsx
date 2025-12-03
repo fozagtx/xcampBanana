@@ -1,29 +1,9 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
-import {
-  ReactFlow,
-  Background,
-  Controls,
-  Node,
-  Edge,
-  addEdge,
-  Connection,
-  useNodesState,
-  useEdgesState,
-  BackgroundVariant,
-} from "@xyflow/react"
-import "@xyflow/react/dist/style.css"
-
+import { useState, useCallback } from "react"
 import UseCaseNode from "./nodes/UseCaseNode"
 import TextInputNode from "./nodes/TextInputNode"
 import ResultNode from "./nodes/ResultNode"
-
-const nodeTypes = {
-  useCase: UseCaseNode,
-  textInput: TextInputNode,
-  result: ResultNode,
-}
 
 interface UseCase {
   id: string
@@ -115,151 +95,58 @@ export default function TweetFlowDashboard({ onMintNFT }: TweetFlowDashboardProp
     }
   }, [])
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([
-    {
-      id: "use-case",
-      type: "useCase",
-      position: { x: 50, y: 150 },
-      data: {
-        onSelectUseCase: handleSelectUseCase,
-        selectedUseCase: selectedUseCase?.id,
-      },
-    },
-    {
-      id: "text-input",
-      type: "textInput",
-      position: { x: 550, y: 150 },
-      data: {
-        basePrompt: selectedUseCase?.basePrompt || "",
-        useCaseTitle: selectedUseCase?.title || "",
-        useCaseId: selectedUseCase?.id,
-        onSubmit: handleSubmit,
-        disabled: !selectedUseCase,
-        isLoading: isProcessing,
-      },
-    },
-    {
-      id: "result",
-      type: "result",
-      position: { x: 1080, y: 150 },
-      data: {
-        content: resultContent,
-        isLoading: isProcessing,
-        useCaseTitle: selectedUseCase?.title,
-        onMintNFT: onMintNFT,
-      },
-    },
-  ])
-
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([
-    {
-      id: "usecase-input",
-      source: "use-case",
-      target: "text-input",
-      animated: true,
-      style: { stroke: "#f97316", strokeWidth: 2 },
-    },
-    {
-      id: "input-result",
-      source: "text-input",
-      target: "result",
-      animated: isProcessing,
-      style: { stroke: "#8b5cf6", strokeWidth: 2 },
-    },
-  ])
-
-  // Update nodes when state changes using useEffect
-  useEffect(() => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === "use-case") {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              onSelectUseCase: handleSelectUseCase,
-              selectedUseCase: selectedUseCase?.id,
-            },
-          }
-        }
-        if (node.id === "text-input") {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              basePrompt: selectedUseCase?.basePrompt || "",
-              useCaseTitle: selectedUseCase?.title || "",
-              useCaseId: selectedUseCase?.id,
-              onSubmit: handleSubmit,
-              disabled: !selectedUseCase,
-              isLoading: isProcessing,
-            },
-          }
-        }
-        if (node.id === "result") {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              content: resultContent,
-              isLoading: isProcessing,
-              useCaseTitle: selectedUseCase?.title,
-              onMintNFT: onMintNFT,
-            },
-          }
-        }
-        return node
-      })
-    )
-
-    // Update edge animation
-    setEdges((eds) =>
-      eds.map((edge) => {
-        if (edge.id === "input-result") {
-          return {
-            ...edge,
-            animated: isProcessing,
-          }
-        }
-        return edge
-      })
-    )
-  }, [selectedUseCase, isProcessing, resultContent, handleSelectUseCase, handleSubmit, setNodes, setEdges, onMintNFT])
-
-  const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  )
-
   return (
-    <div className="w-full h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="w-full h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 overflow-auto">
       {/* Info Badge */}
-      <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm shadow-lg rounded-lg px-4 py-2 border border-gray-200">
-        <p className="text-sm font-semibold text-gray-700">
-          AI Brand Kit Flow
-        </p>
-        <p className="text-xs text-gray-600">
-          Select Action -&gt; Add Context -&gt; Get Result
-        </p>
-      </div>
+      <div className="max-w-7xl mx-auto p-8">
+        <div className="mb-8 bg-white/90 backdrop-blur-sm shadow-lg rounded-lg px-6 py-4 border border-gray-200">
+          <p className="text-lg font-semibold text-gray-700">
+            AI Brand Kit Flow
+          </p>
+          <p className="text-sm text-gray-600">
+            Select Action → Add Context → Get Result
+          </p>
+        </div>
 
-      {/* React Flow Canvas */}
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.3 }}
-        minZoom={0.3}
-        maxZoom={1.5}
-        className="w-full h-full"
-      >
-        <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-        <Controls className="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg" />
-      </ReactFlow>
+        {/* Horizontal Card Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Use Case Selection Card */}
+          <div className="lg:col-span-1">
+            <UseCaseNode
+              data={{
+                onSelectUseCase: handleSelectUseCase,
+                selectedUseCase: selectedUseCase?.id,
+              }}
+            />
+          </div>
+
+          {/* Text Input Card */}
+          <div className="lg:col-span-1">
+            <TextInputNode
+              data={{
+                basePrompt: selectedUseCase?.basePrompt || "",
+                useCaseTitle: selectedUseCase?.title || "",
+                useCaseId: selectedUseCase?.id,
+                onSubmit: handleSubmit,
+                disabled: !selectedUseCase,
+                isLoading: isProcessing,
+              }}
+            />
+          </div>
+
+          {/* Result Card */}
+          <div className="lg:col-span-1">
+            <ResultNode
+              data={{
+                content: resultContent,
+                isLoading: isProcessing,
+                useCaseTitle: selectedUseCase?.title,
+                onMintNFT: onMintNFT,
+              }}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

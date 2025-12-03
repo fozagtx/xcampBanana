@@ -1,7 +1,6 @@
 "use client"
 
 import { memo } from "react"
-import { Handle, Position, Node } from "@xyflow/react"
 import { Button } from "@/components/ui/button"
 import { X, HelpCircle, ArrowRight, Zap, FileText, Image as ImageIcon, Download, Wallet } from "lucide-react"
 
@@ -9,13 +8,9 @@ export interface HelpNodeData extends Record<string, unknown> {
   onClose: () => void
 }
 
-export type HelpNodeType = Node<HelpNodeData, "help">
-
 const HelpNode = memo(({ data }: { data: HelpNodeData }) => {
   return (
-    <div className="rounded-xl border-2 border-green-400 bg-gradient-to-br from-green-50 via-white to-emerald-50 shadow-xl p-6 min-w-[500px]">
-      <Handle type="target" position={Position.Left} className="!bg-green-500" />
-
+    <div className="rounded-xl border-2 border-green-400 bg-gradient-to-br from-green-50 via-white to-emerald-50 shadow-xl p-6 w-full">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -41,7 +36,7 @@ const HelpNode = memo(({ data }: { data: HelpNodeData }) => {
               Choose Your Action
             </h4>
             <p className="text-sm text-gray-600 mb-2">
-              Select what you want to create from the first node:
+              Select what you want to create from the first card:
             </p>
             <div className="space-y-2 ml-4">
               <div className="flex items-center gap-2 text-sm">
@@ -61,7 +56,7 @@ const HelpNode = memo(({ data }: { data: HelpNodeData }) => {
               Add Your Input
             </h4>
             <p className="text-sm text-gray-600">
-              Enter your requirements in the text input node:
+              Enter your requirements in the text input card:
             </p>
             <ul className="text-sm text-gray-600 ml-4 mt-2 space-y-1">
               <li>• For <strong>Image Prompts:</strong> Describe the image you want to generate</li>
