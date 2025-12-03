@@ -2,16 +2,14 @@
 
 import { memo } from "react"
 import { Button } from "@/components/ui/button"
-import { Download, Wallet, Loader2, CheckCircle, FileText } from "lucide-react"
+import { Download, Loader2, FileText } from "lucide-react"
 
 export interface ResultNodeData extends Record<string, unknown> {
   content?: string
   isLoading?: boolean
   selectedAction?: string | null
   onExportPDF?: () => void
-  onMintNFT?: () => void
   isExporting?: boolean
-  authenticated?: boolean
   useCaseTitle?: string
 }
 
@@ -68,79 +66,42 @@ const ResultNode = memo(({ data }: { data: ResultNodeData }) => {
 
         {data.content && !data.isLoading && (
           <div className="space-y-3">
-            {isBrandDashboard && data.onExportPDF && data.onMintNFT && (
+            {isBrandDashboard && data.onExportPDF && (
               <>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={data.onExportPDF}
-                    disabled={data.isExporting}
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 border-green-200 hover:border-green-400 hover:bg-green-50"
-                  >
-                    {data.isExporting ? (
-                      <>
-                        <Loader2 size={14} className="mr-2 animate-spin" />
-                        Exporting...
-                      </>
-                    ) : (
-                      <>
-                        <Download size={14} className="mr-2" />
-                        Export PDF
-                      </>
-                    )}
-                  </Button>
-
-                  <Button
-                    onClick={data.onMintNFT}
-                    size="sm"
-                    className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
-                  >
-                    {data.authenticated ? (
-                      <>
-                        <CheckCircle size={14} className="mr-2" />
-                        MY ORIGIN
-                      </>
-                    ) : (
-                      <>
-                        <Wallet size={14} className="mr-2" />
-                        MY ORIGIN
-                      </>
-                    )}
-                  </Button>
-                </div>
+                <Button
+                  onClick={data.onExportPDF}
+                  disabled={data.isExporting}
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-green-200 hover:border-green-400 hover:bg-green-50"
+                >
+                  {data.isExporting ? (
+                    <>
+                      <Loader2 size={14} className="mr-2 animate-spin" />
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <Download size={14} className="mr-2" />
+                      Export PDF
+                    </>
+                  )}
+                </Button>
 
                 <div className="p-3 bg-green-50 rounded-lg border border-green-200">
                   <p className="text-xs text-green-700">
-                    ✓ Content ready for export and minting
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {data.authenticated
-                      ? "Connect with MY ORIGIN to mint as NFT"
-                      : "Click MY ORIGIN to connect wallet and mint"
-                    }
+                    ✓ Content ready for export
                   </p>
                 </div>
               </>
             )}
 
-            {isTweetDashboard && data.onMintNFT && (
-              <>
-                <Button
-                  onClick={data.onMintNFT}
-                  size="sm"
-                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
-                >
-                  <Wallet size={14} className="mr-2" />
-                  Mint as NFT
-                </Button>
-
-                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                  <p className="text-xs text-green-700">
-                    ✓ Content ready for minting
-                  </p>
-                </div>
-              </>
+            {isTweetDashboard && (
+              <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                <p className="text-xs text-green-700">
+                  ✓ Content generated successfully
+                </p>
+              </div>
             )}
           </div>
         )}
