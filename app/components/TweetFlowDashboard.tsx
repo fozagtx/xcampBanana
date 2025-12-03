@@ -141,7 +141,7 @@ export default function TweetFlowDashboard({ onMintNFT }: TweetFlowDashboardProp
                 content: resultContent,
                 isLoading: isProcessing,
                 useCaseTitle: selectedUseCase?.title,
-                onMintNFT: onMintNFT,
+                onMintNFT: onMintNFT ? () => onMintNFT(resultContent) : undefined,
               }}
             />
           </div>
