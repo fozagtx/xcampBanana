@@ -3,7 +3,6 @@
 export const dynamic = "force-dynamic";
 import { CampModal } from "@campnetwork/origin/react";
 import { useAuthState } from "@campnetwork/origin/react";
-import ChatWidget from "./components/ChatWidget";
 import Link from "next/link";
 
 export default function Home() {
@@ -22,12 +21,20 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               {authenticated && (
-                <Link
-                  href="/dashboard"
-                  className="px-6 py-2 bg-linear-to-r from-yellow-600 to-orange-600 text-white rounded-full font-medium hover:from-yellow-700 hover:to-orange-700 transition-all shadow-md"
-                >
-                  Dashboard
-                </Link>
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="px-6 py-2 bg-linear-to-r from-yellow-600 to-orange-600 text-white rounded-full font-medium hover:from-yellow-700 hover:to-orange-700 transition-all shadow-md"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/brand-planner"
+                    className="px-6 py-2 bg-linear-to-r from-purple-600 to-pink-600 text-white rounded-full font-medium hover:from-purple-700 hover:to-pink-700 transition-all shadow-md"
+                  >
+                    AI Brand Planner
+                  </Link>
+                </>
               )}
               <CampModal />
             </div>
@@ -41,13 +48,12 @@ export default function Home() {
           <div className="text-center">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6">
               <span className="bg-linear-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent">
-                Value Your Content
+                Build Your Brand
               </span>
             </h1>
 
             <p className="text-xl sm:text-2xl text-zinc-600 max-w-3xl mx-auto leading-relaxed">
-              Transform your viral tweets into valuable IpNFTs and create unique
-              Nanabanapro Brandkit prompts on Camp Network
+              Track your top tweets, generate viral content strategies, and create AI image prompts with your personal brand kit planner
             </p>
           </div>
         </div>
@@ -82,39 +88,37 @@ export default function Home() {
               Powerful Features
             </h2>
             <p className="text-lg text-zinc-600">
-              Everything you need to monetize your digital content
+              Everything you need to build and grow your brand
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                title: "X Integration",
+                title: "Tweet Performance Tracking",
                 description:
-                  "Seamlessly connect your X (Twitter) account and import your content",
+                  "Add and track your top-performing tweets with detailed metrics",
               },
               {
-                title: "Tweet Analytics",
+                title: "PDF Export",
                 description:
-                  "View engagement metrics to identify your most valuable content",
+                  "Export your tweet collections and AI insights to professional PDFs",
               },
               {
-                title: "Mint as IpNFTs",
-                description:
-                  "Convert your viral tweets into tradable intellectual property",
+                title: "AI Brand Planner",
+                description: "Get personalized brand strategies and viral content insights",
               },
               {
-                title: "Brandkit Creation",
-                description:
-                  "Design and sell Nanabanapro Brandkit JSON prompts",
+                title: "Case Study Generation",
+                description: "Generate detailed brand case studies with actionable strategies",
               },
               {
-                title: "Custom Royalties",
-                description: "Set your own pricing and royalty percentages",
+                title: "Image Prompt Creator",
+                description: "Create JSON context prompts for AI image generation tools",
               },
               {
-                title: "Camp Network",
-                description: "Built on secure, decentralized infrastructure",
+                title: "Web Search Integration",
+                description: "Real-time trend analysis with Brave Search API",
               },
             ].map((feature, index) => (
               <div
@@ -137,19 +141,15 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-linear-to-r from-yellow-600 to-orange-600 rounded-3xl p-12 shadow-2xl">
             <h2 className="text-4xl font-bold text-white mb-4">
-              Ready to Start Earning?
+              Ready to Build Your Brand?
             </h2>
             <p className="text-xl text-yellow-100 mb-8">
-              Join xcampBanana today and turn your content into valuable digital
-              assets
+              Join xcampBanana today and unlock AI-powered brand growth tools
             </p>
             <CampModal />
           </div>
         </div>
       </section>
-
-      {/* AI Chat Widget */}
-      <ChatWidget />
 
       {/* Footer */}
       <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-zinc-200">

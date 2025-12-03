@@ -8,7 +8,7 @@
 
 ## About
 
-Decentralized app for content creators to monetize work on Camp Network. Link X account, mint tweets as IpNFTs, and sell Nanabanapro Brandkit prompts.
+Decentralized app for content creators to monetize work on Camp Network. Create and sell Nanabanapro Brandkit prompts.
 
 ## Architecture
 
@@ -16,22 +16,16 @@ Decentralized app for content creators to monetize work on Camp Network. Link X 
 graph TB
     A[User Wallet] --> B[xcampBanana dApp]
     B --> C[Camp Network SDK]
-    B --> D[X/Twitter API]
 
-    D --> E[Fetch Tweets]
-    E --> F[Tweet Analytics]
-    F --> G[Mint as IpNFT]
+    B --> D[Brandkit Creator]
+    D --> E[Mint Brandkit]
 
-    B --> H[Brandkit Creator]
-    H --> I[Mint Brandkit]
-
-    G --> C
-    I --> C
-    C --> J[Camp Network Blockchain]
+    E --> C
+    C --> F[Camp Network Blockchain]
 
     style B fill:#f9f,stroke:#333,stroke-width:4px
     style C fill:#bbf,stroke:#333,stroke-width:2px
-    style J fill:#bfb,stroke:#333,stroke-width:2px
+    style F fill:#bfb,stroke:#333,stroke-width:2px
 ```
 
 ## Quick Start
@@ -49,11 +43,10 @@ npm run build
 
 ## Features
 
-- X Account Integration
-- Tweet Analytics
-- Mint Tweets as IpNFTs
 - Brandkit Creation & Sales
+- PDF Export & Upload
 - Custom Royalties
+- AI Assistant
 - Camp Network Powered
 
 ## Tech Stack
@@ -70,7 +63,6 @@ npm run build
 xcamp/
 ├── app/
 │   ├── components/
-│   │   ├── TweetDashboard.tsx
 │   │   └── BrandkitMint.tsx
 │   ├── layout.tsx
 │   ├── page.tsx
@@ -86,17 +78,14 @@ sequenceDiagram
     participant U as User
     participant W as Wallet
     participant A as xcampBanana
-    participant X as X/Twitter
     participant C as Camp Network
 
     U->>W: Connect Wallet
     W->>A: Authenticated
-    U->>A: Link X Account
-    A->>X: Authorize
-    X->>A: Return Tweets
-    A->>U: Display Analytics
-    U->>A: Select Tweet to Mint
-    A->>C: Mint IpNFT
+    U->>A: Create Brandkit
+    A->>U: Display Preview
+    U->>A: Export PDF / Mint
+    A->>C: Mint Brandkit
     C->>A: NFT Created
     A->>U: Success + NFT Details
 ```

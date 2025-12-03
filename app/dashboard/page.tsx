@@ -4,14 +4,14 @@ export const dynamic = "force-dynamic";
 
 import { useAuthState } from "@campnetwork/origin/react";
 import { CampModal } from "@campnetwork/origin/react";
-import TweetDashboard from "../components/TweetDashboard";
-import BrandkitMint from "../components/BrandkitMint";
-import ChatWidget from "../components/ChatWidget";
-import Image from "next/image";
+import TweetManager from "../components/TweetManager";
+import TweetFlowDashboard from "../components/TweetFlowDashboard";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function Dashboard() {
   const { authenticated } = useAuthState();
+  const [activeTab, setActiveTab] = useState<"tweets" | "flow">("flow");
 
   if (!authenticated) {
     return (
@@ -33,7 +33,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
       {/* Navigation */}
       <div className="pt-8 pb-4 px-4 sm:px-6 lg:px-8">
-        <nav className="max-w-5xl mx-auto bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-zinc-200 px-6 py-4">
+        <nav className="max-w-7xl mx-auto bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-zinc-200 px-6 py-4">
           <div className="flex justify-between items-center">
             <Link
               href="/"
@@ -43,43 +43,61 @@ export default function Dashboard() {
                 xcampBanana
               </span>
             </Link>
-            <CampModal />
+            <div className="flex items-center gap-4">
+              <Link
+                href="/brand-planner"
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 text-white font-semibold hover:opacity-90 transition-opacity"
+              >
+                🤖 AI Brand Planner
+              </Link>
+              <CampModal />
+            </div>
           </div>
         </nav>
       </div>
 
-      {/* Tweet Dashboard Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      {/* Tab Navigation */}
+      <div className="px-4 sm:px-6 lg:px-8 mt-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4 text-zinc-900">
-              Your Tweet Dashboard
-            </h2>
-            <p className="text-lg text-zinc-600">
-              Connect and monetize your best performing tweets
-            </p>
+          <div className="flex gap-2 bg-white rounded-xl p-2 shadow-sm border border-zinc-200">
+            <button
+              onClick={() => setActiveTab("flow")}
+              className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
+                activeTab === "flow"
+                  ? "bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-md"
+                  : "text-zinc-600 hover:bg-zinc-50"
+              }`}
+            >
+              ✍️ Tweet Writer Flow
+            </button>
+            <button
+              onClick={() => setActiveTab("tweets")}
+              className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
+                activeTab === "tweets"
+                  ? "bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-md"
+                  : "text-zinc-600 hover:bg-zinc-50"
+              }`}
+            >
+              📊 Top Performing Tweets
+            </button>
           </div>
-          <TweetDashboard />
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {activeTab === "flow" ? (
+            <div className="rounded-2xl shadow-xl border border-zinc-200 overflow-hidden" style={{ height: "calc(100vh - 280px)" }}>
+              <TweetFlowDashboard />
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-xl border border-zinc-200 p-8">
+              <TweetManager />
+            </div>
+          )}
         </div>
       </section>
-
-      {/* Brandkit Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-50 to-orange-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4 text-zinc-900">
-              Nanabanapro Brandkit
-            </h2>
-            <p className="text-lg text-zinc-600">
-              Create and sell custom brandkit prompts
-            </p>
-          </div>
-          <BrandkitMint />
-        </div>
-      </section>
-
-      {/* AI Chat Widget */}
-      <ChatWidget />
 
       {/* Footer */}
       <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-zinc-200">
