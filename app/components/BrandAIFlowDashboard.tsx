@@ -339,7 +339,7 @@ export default function BrandAIFlowDashboard() {
         }
         return [...prev, helpNode]
       })
-      
+
       // Add edge from placeholder to help
       setEdges((prev) => {
         // Check if edge already exists to avoid duplicate adds
@@ -361,7 +361,7 @@ export default function BrandAIFlowDashboard() {
       setNodes((prev) => prev.filter((node) => node.id !== "help"))
       setEdges((prev) => prev.filter((edge) => edge.id !== "placeholder-help"))
     }
-  }, [showHelp, handleCloseHelp, setNodes, setEdges])
+  }, [showHelp, handleCloseHelp])
 
   // Update nodes when state changes
   useEffect(() => {
@@ -429,7 +429,7 @@ export default function BrandAIFlowDashboard() {
         return edge
       })
     )
-  }, [selectedAction, inputText, resultContent, isProcessing, isExporting, authenticated, handleSelectAction, handleSubmit, exportToPDF, handleMintNFT, handleToggleHelp, setNodes, setEdges])
+  }, [selectedAction, inputText, resultContent, isProcessing, isExporting, authenticated, handleSelectAction, handleSubmit, exportToPDF, handleMintNFT, handleToggleHelp])
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
