@@ -15,6 +15,10 @@ export default function BrandkitMint() {
   const [showPreview, setShowPreview] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [price, setPrice] = useState("0.001");
+  const [duration, setDuration] = useState("1");
+  const [royalty, setRoyalty] = useState("10");
+  const [parentId, setParentId] = useState("");
   const previewRef = useRef<HTMLPreElement>(null);
 
   const formatJSON = (jsonString: string) => {
@@ -37,10 +41,31 @@ export default function BrandkitMint() {
 
   const mintBrandkit = async () => {
     if ((!content && !pdfFile) || !name) return;
+
+    // Validate pricing parameters
+    const priceFloat = parseFloat(price);
+    const durationDays = parseFloat(duration);
+    const royaltyPercent = parseFloat(royalty);
+
+    if (isNaN(priceFloat) || priceFloat < 0.001) {
+      alert("Price must be at least 0.001 CAMP");
+      return;
+    }
+
+    if (isNaN(durationDays) || durationDays < 1) {
+      alert("Duration must be at least 1 day");
+      return;
+    }
+
+    if (isNaN(royaltyPercent) || royaltyPercent < 0 || royaltyPercent > 100) {
+      alert("Royalty must be between 0% and 100%");
+      return;
+    }
+
     setMinting(true);
     try {
       let file: File;
-      
+
       if (pdfFile) {
         // Use uploaded PDF file
         file = pdfFile;
@@ -59,79 +84,187 @@ export default function BrandkitMint() {
         );
       }
 
-      // Fixed license terms according to Origin SDK constraints
+      // Calculate license terms from user input
+      // Convert CAMP to wei (1 CAMP = 10^18 wei)
+      const priceInWei = BigInt(Math.floor(priceFloat * 1e18));
+
+      // Convert days to seconds
+      const durationInSeconds = Math.floor(durationDays * 86400);
+
+      // Convert percentage to basis points (1% = 100 basis points)
+      const royaltyInBps = Math.floor(royaltyPercent * 100);
+
       const license = {
-        price: 1000000000000000n, // 0.001 CAMP minimum
-        duration: 86400, // 1 day minimum (86400 seconds)
-        royaltyBps: 1000, // 10% royalty (1000 basis points)
+        price: priceInWei,
+        duration: durationInSeconds,
+        royaltyBps: royaltyInBps,
         paymentToken: "0x0000000000000000000000000000000000000000" as const,
       };
 
       const metadata = {
         name: `Brandkit: ${name}`,
         description: pdfFile ? "Nanabanapro Brandkit PDF" : "Nanabanapro Brandkit JSON Prompt",
+        price: priceFloat,
+        duration: durationDays,
+        royalty: royaltyPercent,
       };
 
       if (!auth.origin) {
         throw new Error("Origin SDK not initialized");
       }
 
-      const result = await auth.origin.mintFile(file, metadata, license);
+      // Use mintFile with optional parentId for derivative works
+      // The SDK expects an array of parent IDs
+      const parentIds = parentId ? [BigInt(parentId)] : undefined;
+
+      const result = await auth.origin.mintFile(
+        file,
+        metadata,
+        license,
+        parentIds
+      );
+
       console.log("Mint result:", result);
-      alert(`Brandkit minted successfully! Token ID: ${result}`);
+      alert(`Brandkit minted successfully! Token ID: ${result}\n\nPrice: ${priceFloat} CAMP\nDuration: ${durationDays} day(s)\nRoyalty: ${royaltyPercent}%`);
+
+      // Reset form
       setContent("");
       setName("");
       setPdfFile(null);
       setShowPreview(false);
+      setPrice("0.001");
+      setDuration("1");
+      setRoyalty("10");
+      setParentId("");
     } catch (e) {
       console.error("Error minting brandkit:", e);
-      alert("Failed to mint brandkit. Please check all parameters and try again.");
+      alert(`Failed to mint brandkit: ${e instanceof Error ? e.message : "Unknown error"}\n\nPlease check all parameters and try again.`);
     } finally {
       setMinting(false);
     }
   };
 
   const exportToPDF = async () => {
-    if (!previewRef.current || !name) return;
-    
+    if (!name) {
+      alert("Please enter a Brandkit name first.");
+      return;
+    }
+
     setExportingPdf(true);
     try {
-      const canvas = await html2canvas(previewRef.current, {
-        backgroundColor: '#fafafa',
-        scale: 2,
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       });
-      
+
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight) * 200;
-      const imgX = (pdfWidth - imgWidth * ratio / 200) / 2;
-      const imgY = 10;
-      
-      pdf.setFontSize(16);
-      pdf.text(`Brandkit: ${name}`, pdfWidth / 2, 20, { align: 'center' });
-      
-      pdf.addImage(
-        imgData,
-        'PNG',
-        imgX,
-        imgY + 10,
-        imgWidth * ratio / 200,
-        imgHeight * ratio / 200
-      );
-      
+      const margin = 15;
+      let yPosition = margin;
+
+      // Title
+      pdf.setFontSize(20);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(`Brandkit: ${name}`, margin, yPosition);
+      yPosition += 10;
+
+      // Subtitle
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(100, 100, 100);
+      pdf.text("Nanabanapro Brandkit - JSON Prompt", margin, yPosition);
+      yPosition += 15;
+
+      // Pricing Information Box
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setFillColor(250, 250, 250);
+      pdf.rect(margin, yPosition, pdfWidth - 2 * margin, 30, "FD");
+
+      pdf.setFontSize(10);
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Licensing Terms:", margin + 5, yPosition + 7);
+
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Price: ${price} CAMP`, margin + 5, yPosition + 14);
+      pdf.text(`Duration: ${duration} day(s)`, margin + 5, yPosition + 21);
+      pdf.text(`Royalty: ${royalty}%`, margin + 5, yPosition + 28);
+
+      yPosition += 40;
+
+      // JSON Content
+      if (content && isValidJSON(content)) {
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(12);
+        pdf.text("JSON Content:", margin, yPosition);
+        yPosition += 7;
+
+        // Format JSON for better display
+        const formattedJSON = formatJSON(content);
+        const lines = formattedJSON.split('\n');
+
+        pdf.setFont("courier", "normal");
+        pdf.setFontSize(9);
+        pdf.setTextColor(0, 0, 0);
+
+        for (let i = 0; i < lines.length; i++) {
+          if (yPosition > pdfHeight - margin - 10) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          pdf.text(lines[i], margin, yPosition);
+          yPosition += 5;
+        }
+      }
+
+      // If there's a preview element, capture it as image too
+      if (previewRef.current && showPreview) {
+        try {
+          const canvas = await html2canvas(previewRef.current, {
+            backgroundColor: '#fafafa',
+            scale: 2,
+          });
+
+          const imgData = canvas.toDataURL('image/png');
+
+          // Add new page for visual preview
+          pdf.addPage();
+          yPosition = margin;
+
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(12);
+          pdf.text("Visual Preview:", margin, yPosition);
+          yPosition += 10;
+
+          const imgWidth = pdfWidth - 2 * margin;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+          pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
+        } catch (imgError) {
+          console.warn("Could not add preview image:", imgError);
+        }
+      }
+
+      // Footer
+      const pageCount = pdf.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(
+          `Generated by xcampBanana - Page ${i} of ${pageCount}`,
+          pdfWidth / 2,
+          pdfHeight - 10,
+          { align: 'center' }
+        );
+      }
+
       pdf.save(`${name.replace(/\s+/g, "-").toLowerCase()}-brandkit.pdf`);
+      alert("PDF exported successfully!");
     } catch (e) {
       console.error("Error exporting PDF:", e);
-      alert("Failed to export PDF.");
+      alert(`Failed to export PDF: ${e instanceof Error ? e.message : "Unknown error"}`);
     } finally {
       setExportingPdf(false);
     }
@@ -149,8 +282,8 @@ export default function BrandkitMint() {
         </h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1 tex-black">
-              Brandkit Name
+            <label className="block text-sm font-medium mb-1 text-black">
+              Brandkit Name *
             </label>
             <input
               type="text"
@@ -158,7 +291,80 @@ export default function BrandkitMint() {
               onChange={(e) => setName(e.target.value)}
               className="w-full p-3 border rounded-md bg-white border-zinc-300 text-black"
               placeholder="e.g. Cyberpunk Theme"
+              required
             />
+          </div>
+
+          {/* Pricing Parameters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-black">
+                Price (CAMP) *
+              </label>
+              <input
+                type="number"
+                step="0.001"
+                min="0.001"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="w-full p-3 border rounded-md bg-white border-zinc-300 text-black"
+                placeholder="0.001"
+                required
+              />
+              <p className="text-xs text-zinc-500 mt-1">Minimum: 0.001 CAMP</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1 text-black">
+                Duration (days) *
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="1"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                className="w-full p-3 border rounded-md bg-white border-zinc-300 text-black"
+                placeholder="1"
+                required
+              />
+              <p className="text-xs text-zinc-500 mt-1">Minimum: 1 day</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1 text-black">
+                Royalty (%) *
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                max="100"
+                value={royalty}
+                onChange={(e) => setRoyalty(e.target.value)}
+                className="w-full p-3 border rounded-md bg-white border-zinc-300 text-black"
+                placeholder="10"
+                required
+              />
+              <p className="text-xs text-zinc-500 mt-1">Range: 0-100%</p>
+            </div>
+          </div>
+
+          {/* Optional Parent ID for Derivative Works */}
+          <div>
+            <label className="block text-sm font-medium mb-1 text-black">
+              Parent Token ID (Optional)
+            </label>
+            <input
+              type="text"
+              value={parentId}
+              onChange={(e) => setParentId(e.target.value)}
+              className="w-full p-3 border rounded-md bg-white border-zinc-300 text-black"
+              placeholder="e.g. 12345 (for derivative works)"
+            />
+            <p className="text-xs text-zinc-500 mt-1">
+              Leave empty for original work. Specify parent token ID if this is a derivative.
+            </p>
           </div>
           
           <div>
@@ -221,27 +427,51 @@ export default function BrandkitMint() {
                     type="button"
                     onClick={exportToPDF}
                     disabled={exportingPdf || !name}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm flex items-center gap-2"
                   >
-                    {exportingPdf ? "📄 Exporting..." : "📄 Export PDF"}
+                    {exportingPdf ? "⏳ Exporting..." : "📄 Download PDF"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowPreview(!showPreview)}
-                    className="text-sm text-yellow-600 hover:text-yellow-700 font-medium"
+                    className="px-4 py-2 bg-zinc-200 text-zinc-700 rounded-lg hover:bg-zinc-300 font-medium transition-colors text-sm"
                   >
                     {showPreview ? "👁️ Hide" : "👁️ Show"} Preview
                   </button>
                 </div>
               </div>
               {showPreview && (
-                <pre 
+                <pre
                   ref={previewRef}
                   className="w-full p-4 border rounded-md bg-zinc-50 border-zinc-300 font-mono text-sm overflow-x-auto max-h-64 overflow-y-auto"
                 >
                   <code className="text-zinc-800">{formatJSON(content)}</code>
                 </pre>
               )}
+            </div>
+          )}
+
+          {/* Export PDF Section - Always visible when content exists */}
+          {content && isValidJSON(content) && !showPreview && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-semibold text-blue-900 mb-1">
+                    Ready to Export
+                  </h4>
+                  <p className="text-xs text-blue-700">
+                    Download your Brandkit as a formatted PDF with all licensing details
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={exportToPDF}
+                  disabled={exportingPdf || !name}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg flex items-center gap-2"
+                >
+                  {exportingPdf ? "⏳ Generating..." : "📄 Download PDF"}
+                </button>
+              </div>
             </div>
           )}
 
