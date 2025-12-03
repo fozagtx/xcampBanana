@@ -15,205 +15,176 @@ import {
   BackgroundVariant,
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
-import { useChat } from "@ai-sdk/react"
-import { DefaultChatTransport } from "ai"
 import { Button } from "@/components/ui/button"
 import { Download, Maximize2, Minimize2 } from "lucide-react"
 import jsPDF from "jspdf"
+import { useAuth, useAuthState } from "@campnetwork/origin/react"
 
-import ChatInputNode from "./nodes/ChatInputNode"
-import ChatMessageNode from "./nodes/ChatMessageNode"
-import WelcomeNode from "./nodes/WelcomeNode"
+import PlaceholderNode from "./nodes/PlaceholderNode"
+import TextInputNode from "./nodes/TextInputNode"
+import ResultNode from "./nodes/ResultNode"
+import HelpNode from "./nodes/HelpNode"
 
 const nodeTypes = {
-  chatInput: ChatInputNode,
-  chatMessage: ChatMessageNode,
-  welcome: WelcomeNode,
+  placeholder: PlaceholderNode,
+  textInput: TextInputNode,
+  result: ResultNode,
+  help: HelpNode,
 }
 
 export default function BrandAIFlowDashboard() {
-  const [input, setInput] = useState("")
+  const [selectedAction, setSelectedAction] = useState<string | null>(null)
+  const [inputText, setInputText] = useState("")
+  const [resultContent, setResultContent] = useState("")
+  const [isProcessing, setIsProcessing] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
+  
+  const { authenticated } = useAuthState()
+  const auth = useAuth()
 
-  const { messages, sendMessage, status, error } = useChat({
-    transport: new DefaultChatTransport({
-      api: "/api/primitives/chatbot",
-    }),
-  })
+  const handleSelectAction = useCallback((action: string) => {
+    setSelectedAction(action)
+    setResultContent("")
+    setInputText("")
+  }, [])
 
-  const handleSubmit = useCallback(() => {
-    if (!input.trim()) return
+  const handleSubmit = useCallback(async (text: string) => {
+    if (!text.trim() || !selectedAction) return
 
-    sendMessage({ text: input })
-    setInput("")
-  }, [input, sendMessage])
+    setIsProcessing(true)
+    setResultContent("")
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([
-    {
-      id: "welcome",
-      type: "welcome",
-      position: { x: 50, y: 200 },
-      data: {},
-    },
-    {
-      id: "input",
-      type: "chatInput",
-      position: { x: 650, y: 200 },
-      data: {
-        value: input,
-        onChange: setInput,
-        onSubmit: handleSubmit,
-        disabled: status !== "ready" && status !== "error",
-      },
-    },
-  ])
+    try {
+      let prompt = ""
+      if (selectedAction === "image-prompt") {
+        prompt = `Generate a detailed, vivid image generation prompt for AI art tools (DALL-E, Midjourney, Stable Diffusion). Include style, composition, colors, mood, lighting, and specific visual details. Create an image of: ${text}`
+      } else {
+        prompt = `Create a comprehensive brand case study analyzing the following brand/product. Include: target audience analysis, unique value proposition, viral marketing strategies, content pillars, and growth tactics. Brand/Product: ${text}`
+      }
 
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([
-    {
-      id: "welcome-input",
-      source: "welcome",
-      target: "input",
-      animated: true,
-      style: { stroke: "#f97316", strokeWidth: 2 },
-    },
-  ])
-
-  // Update nodes when messages change
-  useEffect(() => {
-    const welcomeNode: Node = {
-      id: "welcome",
-      type: "welcome",
-      position: { x: 50, y: 200 },
-      data: {},
-    }
-
-    const inputNode: Node = {
-      id: "input",
-      type: "chatInput",
-      position: { x: 650, y: 200 },
-      data: {
-        value: input,
-        onChange: setInput,
-        onSubmit: handleSubmit,
-        disabled: status !== "ready" && status !== "error",
-      },
-    }
-
-    if (messages.length === 0) {
-      setNodes([welcomeNode, inputNode])
-      setEdges([
-        {
-          id: "welcome-input",
-          source: "welcome",
-          target: "input",
-          animated: true,
-          style: { stroke: "#f97316", strokeWidth: 2 },
+      const response = await fetch("/api/primitives/chatbot", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      ])
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "user",
+              parts: [
+                {
+                  type: "text",
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to generate result")
+      }
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let resultText = ""
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const lines = chunk.split("\n")
+
+          for (const line of lines) {
+            if (line.startsWith("0:")) {
+              try {
+                const jsonStr = line.slice(2)
+                const parsed = JSON.parse(jsonStr)
+                if (parsed.parts && parsed.parts[0] && parsed.parts[0].text) {
+                  resultText += parsed.parts[0].text
+                  setResultContent(resultText)
+                }
+              } catch {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      }
+
+      setResultContent(resultText.trim())
+    } catch (error) {
+      console.error("Error generating result:", error)
+      setResultContent("Error: Failed to generate result. Please try again.")
+    } finally {
+      setIsProcessing(false)
+    }
+  }, [selectedAction])
+
+  const handleMintNFT = useCallback(async () => {
+    if (!authenticated) {
+      auth?.connect()
       return
     }
 
-    const messageNodes: Node[] = []
-    const messageEdges: Edge[] = []
-    let yPosition = 100
-
-    messages.forEach((message, index) => {
-      const nodeId = `message-${index}`
-      const isUser = message.role === "user"
-      const content = message.parts
-        .map((part) => (part.type === "text" ? part.text : ""))
-        .join("")
-
-      messageNodes.push({
-        id: nodeId,
-        type: "chatMessage",
-        position: { x: 1200 + (index % 2) * 50, y: yPosition },
-        data: {
-          role: message.role,
-          content,
-          isLoading: false,
-        },
-      })
-
-      // Connect input to first message
-      if (index === 0) {
-        messageEdges.push({
-          id: `input-${nodeId}`,
-          source: "input",
-          target: nodeId,
-          animated: true,
-          style: {
-            stroke: isUser ? "#3b82f6" : "#22c55e",
-            strokeWidth: 2,
-          },
-        })
-      }
-
-      // Connect previous message to current message
-      if (index > 0) {
-        messageEdges.push({
-          id: `message-${index - 1}-${nodeId}`,
-          source: `message-${index - 1}`,
-          target: nodeId,
-          animated: true,
-          style: {
-            stroke: isUser ? "#3b82f6" : "#22c55e",
-            strokeWidth: 2,
-          },
-        })
-      }
-
-      yPosition += 250
-    })
-
-    // Add loading node if status is submitted
-    if (status === "submitted") {
-      const loadingNodeId = `message-${messages.length}`
-      messageNodes.push({
-        id: loadingNodeId,
-        type: "chatMessage",
-        position: {
-          x: 1200 + (messages.length % 2) * 50,
-          y: yPosition,
-        },
-        data: {
-          role: "assistant",
-          content: "",
-          isLoading: true,
-        },
-      })
-
-      messageEdges.push({
-        id: `message-${messages.length - 1}-${loadingNodeId}`,
-        source: `message-${messages.length - 1}`,
-        target: loadingNodeId,
-        animated: true,
-        style: { stroke: "#22c55e", strokeWidth: 2 },
-      })
+    if (!resultContent) {
+      alert("No content to mint")
+      return
     }
 
-    setNodes([welcomeNode, inputNode, ...messageNodes])
-    setEdges([
-      {
-        id: "welcome-input",
-        source: "welcome",
-        target: "input",
-        animated: true,
-        style: { stroke: "#f97316", strokeWidth: 2 },
-      },
-      ...messageEdges,
-    ])
-  }, [messages, input, status, handleSubmit, setInput, setNodes, setEdges])
+    if (!auth?.origin) {
+      alert("Origin SDK not initialized")
+      return
+    }
 
-  const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  )
+    try {
+      // Create a text file from the content
+      const fileName = selectedAction === "image-prompt" ? "ai-image-prompt" : "brand-case-study"
+      const contentName = selectedAction === "image-prompt" ? "AI Image Prompt" : "Brand Case Study"
+      
+      const fileContent = JSON.stringify({
+        type: contentName,
+        content: resultContent,
+        generatedAt: new Date().toISOString(),
+        action: selectedAction
+      }, null, 2)
 
-  const exportConversationToPDF = async () => {
-    if (messages.length === 0) {
-      alert("No conversation to export")
+      const blob = new Blob([fileContent], { type: "application/json" })
+      const file = new File([blob], `${fileName}-${Date.now()}.json`, { type: "application/json" })
+
+      // Set default licensing terms
+      const license = {
+        price: BigInt("1000000000000000"), // 0.001 CAMP in wei
+        duration: 86400, // 1 day in seconds
+        royaltyBps: 1000, // 10% in basis points
+        paymentToken: "0x0000000000000000000000000000000000000000" as const,
+      }
+
+      const metadata = {
+        name: `${contentName} - AI Generated`,
+        description: `AI-generated ${contentName.toLowerCase()} from xCampBanana Brand Kit`,
+        price: 0.001,
+        duration: 1,
+        royalty: 10,
+      }
+
+      const result = await auth.origin.mintFile(file, metadata, license)
+      
+      alert(`Successfully minted! Token ID: ${result}\n\nPrice: 0.001 CAMP\nDuration: 1 day\nRoyalty: 10%`)
+    } catch (error) {
+      console.error("Minting error:", error)
+      alert(`Failed to mint: ${error instanceof Error ? error.message : "Unknown error"}`)
+    }
+  }, [authenticated, auth, resultContent, selectedAction])
+
+  const exportToPDF = useCallback(async () => {
+    if (!resultContent) {
+      alert("No content to export")
       return
     }
 
@@ -228,9 +199,9 @@ export default function BrandAIFlowDashboard() {
       let yPosition = margin
 
       // Title
-      pdf.setFontSize(22)
+      pdf.setFontSize(20)
       pdf.setFont("helvetica", "bold")
-      pdf.text("AI Brand Planner - Conversation Export", margin, yPosition)
+      pdf.text(selectedAction === "image-prompt" ? "AI Image Prompt" : "Brand Case Study", margin, yPosition)
       yPosition += 12
 
       // Date
@@ -240,46 +211,19 @@ export default function BrandAIFlowDashboard() {
       pdf.text(`Generated on ${new Date().toLocaleString()}`, margin, yPosition)
       yPosition += 15
 
-      // Add each message
-      for (let i = 0; i < messages.length; i++) {
-        const message = messages[i]
-        const isUser = message.role === "user"
-        const text = message.parts
-          .map((part) => (part.type === "text" ? part.text : ""))
-          .join("")
+      // Content
+      pdf.setFontSize(11)
+      pdf.setFont("helvetica", "normal")
+      pdf.setTextColor(0, 0, 0)
 
-        // Check if we need a new page
-        if (yPosition > pageHeight - 40) {
-          pdf.addPage()
-          yPosition = margin
-        }
-
-        // Role label
-        pdf.setFontSize(11)
-        pdf.setFont("helvetica", "bold")
-        if (isUser) {
-          pdf.setTextColor(59, 130, 246) // blue for user
-        } else {
-          pdf.setTextColor(34, 197, 94) // green for AI
-        }
-        pdf.text(isUser ? "You:" : "AI Brand Planner:", margin, yPosition)
-        yPosition += 7
-
-        // Message content
-        pdf.setFontSize(10)
-        pdf.setFont("helvetica", "normal")
-        pdf.setTextColor(0, 0, 0)
-
-        const lines = pdf.splitTextToSize(text, contentWidth)
-        const estimatedHeight = lines.length * 5 + 10
-        if (yPosition + estimatedHeight > pageHeight - margin) {
-          pdf.addPage()
-          yPosition = margin
-        }
-
-        pdf.text(lines, margin + 5, yPosition)
-        yPosition += lines.length * 5 + 10
+      const lines = pdf.splitTextToSize(resultContent, contentWidth)
+      const estimatedHeight = lines.length * 5 + 10
+      if (yPosition + estimatedHeight > pageHeight - margin) {
+        pdf.addPage()
+        yPosition = margin
       }
+
+      pdf.text(lines, margin, yPosition)
 
       // Footer
       const pageCount = pdf.internal.pages.length - 1
@@ -301,7 +245,7 @@ export default function BrandAIFlowDashboard() {
       }
 
       pdf.save(
-        `brand-planner-conversation-${new Date().toISOString().split("T")[0]}.pdf`
+        `${selectedAction === "image-prompt" ? "image-prompt" : "brand-case-study"}-${new Date().toISOString().split("T")[0]}.pdf`
       )
     } catch (error) {
       console.error("PDF export error:", error)
@@ -309,7 +253,168 @@ export default function BrandAIFlowDashboard() {
     } finally {
       setIsExporting(false)
     }
-  }
+  }, [resultContent, selectedAction])
+
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([
+    {
+      id: "placeholder",
+      type: "placeholder",
+      position: { x: 50, y: 200 },
+      data: {
+        onSelectAction: handleSelectAction,
+        selectedAction,
+        onToggleHelp: () => setShowHelp(!showHelp),
+      },
+    },
+    {
+      id: "text-input",
+      type: "textInput",
+      position: { x: 450, y: 200 },
+      data: {
+        value: inputText,
+        onChange: setInputText,
+        onSubmit: handleSubmit,
+        disabled: !selectedAction || isProcessing,
+        isLoading: isProcessing,
+        selectedAction,
+      },
+    },
+    {
+      id: "result",
+      type: "result",
+      position: { x: 850, y: 200 },
+      data: {
+        content: resultContent,
+        isLoading: isProcessing,
+        selectedAction,
+        onExportPDF: exportToPDF,
+        onMintNFT: handleMintNFT,
+        isExporting,
+        authenticated,
+      },
+    },
+  ])
+
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([
+    {
+      id: "placeholder-input",
+      source: "placeholder",
+      target: "text-input",
+      animated: !!selectedAction,
+      style: { stroke: "#f97316", strokeWidth: 2 },
+    },
+    {
+      id: "input-result",
+      source: "text-input",
+      target: "result",
+      animated: isProcessing,
+      style: { stroke: "#8b5cf6", strokeWidth: 2 },
+    },
+  ])
+
+  // Add help node when showHelp is true
+  useEffect(() => {
+    if (showHelp) {
+      const helpNode: Node = {
+        id: "help",
+        type: "help",
+        position: { x: 50, y: 450 },
+        data: {
+          onClose: () => setShowHelp(false),
+        },
+      }
+
+      setNodes((prev) => [...prev, helpNode])
+      
+      // Add edge from placeholder to help
+      setEdges((prev) => [
+        ...prev,
+        {
+          id: "placeholder-help",
+          source: "placeholder",
+          target: "help",
+          animated: true,
+          style: { stroke: "#22c55e", strokeWidth: 2 },
+        },
+      ])
+    } else {
+      setNodes((prev) => prev.filter((node) => node.id !== "help"))
+      setEdges((prev) => prev.filter((edge) => edge.id !== "placeholder-help"))
+    }
+  }, [showHelp, setNodes, setEdges])
+
+  // Update nodes when state changes
+  useEffect(() => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === "placeholder") {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              onSelectAction: handleSelectAction,
+              selectedAction,
+              onToggleHelp: () => setShowHelp(!showHelp),
+            },
+          }
+        }
+        if (node.id === "text-input") {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              value: inputText,
+              onChange: setInputText,
+              onSubmit: handleSubmit,
+              disabled: !selectedAction || isProcessing,
+              isLoading: isProcessing,
+              selectedAction,
+            },
+          }
+        }
+        if (node.id === "result") {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: resultContent,
+              isLoading: isProcessing,
+              selectedAction,
+              onExportPDF: exportToPDF,
+              onMintNFT: handleMintNFT,
+              isExporting,
+              authenticated,
+            },
+          }
+        }
+        return node
+      })
+    )
+
+    // Update edge animation
+    setEdges((eds) =>
+      eds.map((edge) => {
+        if (edge.id === "placeholder-input") {
+          return {
+            ...edge,
+            animated: !!selectedAction,
+          }
+        }
+        if (edge.id === "input-result") {
+          return {
+            ...edge,
+            animated: isProcessing,
+          }
+        }
+        return edge
+      })
+    )
+  }, [selectedAction, inputText, resultContent, isProcessing, isExporting, authenticated, handleSelectAction, handleSubmit, exportToPDF, handleMintNFT, showHelp, setNodes, setEdges])
+
+  const onConnect = useCallback(
+    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges]
+  )
 
   return (
     <div
@@ -319,9 +424,9 @@ export default function BrandAIFlowDashboard() {
     >
       {/* Header Controls */}
       <div className="absolute top-4 right-4 z-10 flex gap-2">
-        {messages.length > 0 && (
+        {resultContent && (
           <Button
-            onClick={exportConversationToPDF}
+            onClick={exportToPDF}
             disabled={isExporting}
             variant="outline"
             size="sm"
@@ -367,13 +472,6 @@ export default function BrandAIFlowDashboard() {
           className="bg-white/80 backdrop-blur-sm"
         />
       </ReactFlow>
-
-      {/* Error Display */}
-      {error && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg z-10">
-          <p className="font-semibold">Error: {error.message}</p>
-        </div>
-      )}
     </div>
   )
 }
