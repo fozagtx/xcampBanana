@@ -50,6 +50,14 @@ export default function BrandAIFlowDashboard() {
     setInputText("")
   }, [])
 
+  const handleToggleHelp = useCallback(() => {
+    setShowHelp((prev) => !prev)
+  }, [])
+
+  const handleCloseHelp = useCallback(() => {
+    setShowHelp(false)
+  }, [])
+
   const handleSubmit = useCallback(async (text: string) => {
     if (!text.trim() || !selectedAction) return
 
@@ -262,8 +270,8 @@ export default function BrandAIFlowDashboard() {
       position: { x: 50, y: 200 },
       data: {
         onSelectAction: handleSelectAction,
-        selectedAction,
-        onToggleHelp: () => setShowHelp(!showHelp),
+        selectedAction: null,
+        onToggleHelp: handleToggleHelp,
       },
     },
     {
@@ -320,28 +328,40 @@ export default function BrandAIFlowDashboard() {
         type: "help",
         position: { x: 50, y: 450 },
         data: {
-          onClose: () => setShowHelp(false),
+          onClose: handleCloseHelp,
         },
       }
 
-      setNodes((prev) => [...prev, helpNode])
+      setNodes((prev) => {
+        // Check if help node already exists to avoid duplicate adds
+        if (prev.some((node) => node.id === "help")) {
+          return prev
+        }
+        return [...prev, helpNode]
+      })
       
       // Add edge from placeholder to help
-      setEdges((prev) => [
-        ...prev,
-        {
-          id: "placeholder-help",
-          source: "placeholder",
-          target: "help",
-          animated: true,
-          style: { stroke: "#22c55e", strokeWidth: 2 },
-        },
-      ])
+      setEdges((prev) => {
+        // Check if edge already exists to avoid duplicate adds
+        if (prev.some((edge) => edge.id === "placeholder-help")) {
+          return prev
+        }
+        return [
+          ...prev,
+          {
+            id: "placeholder-help",
+            source: "placeholder",
+            target: "help",
+            animated: true,
+            style: { stroke: "#22c55e", strokeWidth: 2 },
+          },
+        ]
+      })
     } else {
       setNodes((prev) => prev.filter((node) => node.id !== "help"))
       setEdges((prev) => prev.filter((edge) => edge.id !== "placeholder-help"))
     }
-  }, [showHelp, setNodes, setEdges])
+  }, [showHelp, handleCloseHelp, setNodes, setEdges])
 
   // Update nodes when state changes
   useEffect(() => {
@@ -354,7 +374,7 @@ export default function BrandAIFlowDashboard() {
               ...node.data,
               onSelectAction: handleSelectAction,
               selectedAction,
-              onToggleHelp: () => setShowHelp(!showHelp),
+              onToggleHelp: handleToggleHelp,
             },
           }
         }
@@ -409,7 +429,7 @@ export default function BrandAIFlowDashboard() {
         return edge
       })
     )
-  }, [selectedAction, inputText, resultContent, isProcessing, isExporting, authenticated, handleSelectAction, handleSubmit, exportToPDF, handleMintNFT, showHelp, setNodes, setEdges])
+  }, [selectedAction, inputText, resultContent, isProcessing, isExporting, authenticated, handleSelectAction, handleSubmit, exportToPDF, handleMintNFT, handleToggleHelp, setNodes, setEdges])
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
