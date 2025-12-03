@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import {
   ReactFlow,
   Background,
@@ -168,8 +168,8 @@ export default function TweetFlowDashboard({ onMintNFT }: TweetFlowDashboardProp
     },
   ])
 
-  // Update nodes when state changes
-  const updateNodes = useCallback(() => {
+  // Update nodes when state changes using useEffect
+  useEffect(() => {
     setNodes((nds) =>
       nds.map((node) => {
         if (node.id === "use-case") {
@@ -225,18 +225,6 @@ export default function TweetFlowDashboard({ onMintNFT }: TweetFlowDashboardProp
       })
     )
   }, [selectedUseCase, isProcessing, resultContent, handleSelectUseCase, handleSubmit, setNodes, setEdges, onMintNFT])
-
-  // Trigger update when dependencies change
-  useState(() => {
-    updateNodes()
-  })
-
-  // Update nodes on every render when relevant state changes
-  if (nodes[0]?.data?.selectedUseCase !== selectedUseCase?.id ||
-      nodes[1]?.data?.isLoading !== isProcessing ||
-      nodes[2]?.data?.content !== resultContent) {
-    setTimeout(updateNodes, 0)
-  }
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
