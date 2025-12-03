@@ -31,6 +31,8 @@ import {
 } from "lucide-react"
 import { memo, useState } from "react"
 import jsPDF from "jspdf"
+import ResizableSidebar from "./ResizableSidebar"
+import BrandAIFlowDashboard from "./BrandAIFlowDashboard"
 
 type MessageComponentProps = {
   message: UIMessage
@@ -51,14 +53,14 @@ export const MessageComponent = memo(
     return (
       <Message
         className={cn(
-          "mx-auto flex w-full max-w-3xl flex-col gap-2 px-2 md:px-10",
+          "flex w-full flex-col gap-2 px-2",
           isAssistant ? "items-start" : "items-end"
         )}
       >
         {isAssistant ? (
           <div className="group flex w-full flex-col gap-0">
             <MessageContent
-              className="text-foreground prose w-full min-w-0 flex-1 rounded-lg bg-transparent p-0"
+              className="text-foreground prose prose-sm w-full min-w-0 flex-1 rounded-lg bg-transparent p-0"
               markdown
             >
               {message.parts
@@ -75,27 +77,27 @@ export const MessageComponent = memo(
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="rounded-full"
+                  className="rounded-full h-7 w-7"
                   onClick={copyToClipboard}
                 >
-                  <Copy />
+                  <Copy className="h-3 w-3" />
                 </Button>
               </MessageAction>
               <MessageAction tooltip="Upvote" delayDuration={100}>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <ThumbsUp />
+                <Button variant="ghost" size="icon" className="rounded-full h-7 w-7">
+                  <ThumbsUp className="h-3 w-3" />
                 </Button>
               </MessageAction>
               <MessageAction tooltip="Downvote" delayDuration={100}>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <ThumbsDown />
+                <Button variant="ghost" size="icon" className="rounded-full h-7 w-7">
+                  <ThumbsDown className="h-3 w-3" />
                 </Button>
               </MessageAction>
             </MessageActions>
           </div>
         ) : (
           <div className="group flex w-full flex-col items-end gap-1">
-            <MessageContent className="bg-muted text-primary max-w-[85%] rounded-3xl px-5 py-2.5 whitespace-pre-wrap sm:max-w-[75%]">
+            <MessageContent className="bg-muted text-primary max-w-[85%] rounded-2xl px-4 py-2 whitespace-pre-wrap text-sm">
               {message.parts
                 .map((part) => (part.type === "text" ? part.text : null))
                 .join("")}
@@ -109,10 +111,10 @@ export const MessageComponent = memo(
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="rounded-full"
+                  className="rounded-full h-7 w-7"
                   onClick={copyToClipboard}
                 >
-                  <Copy />
+                  <Copy className="h-3 w-3" />
                 </Button>
               </MessageAction>
             </MessageActions>
@@ -126,9 +128,9 @@ export const MessageComponent = memo(
 MessageComponent.displayName = "MessageComponent"
 
 const LoadingMessage = memo(() => (
-  <Message className="mx-auto flex w-full max-w-3xl flex-col items-start gap-2 px-0 md:px-10">
+  <Message className="flex w-full flex-col items-start gap-2 px-2">
     <div className="group flex w-full flex-col gap-0">
-      <div className="text-foreground prose w-full min-w-0 flex-1 rounded-lg bg-transparent p-0">
+      <div className="text-foreground prose prose-sm w-full min-w-0 flex-1 rounded-lg bg-transparent p-0">
         <DotsLoader />
       </div>
     </div>
@@ -138,11 +140,11 @@ const LoadingMessage = memo(() => (
 LoadingMessage.displayName = "LoadingMessage"
 
 const ErrorMessage = memo(({ error }: { error: Error }) => (
-  <Message className="not-prose mx-auto flex w-full max-w-3xl flex-col items-start gap-2 px-0 md:px-10">
+  <Message className="not-prose flex w-full flex-col items-start gap-2 px-2">
     <div className="group flex w-full flex-col items-start gap-0">
       <div className="text-primary flex min-w-0 flex-1 flex-row items-center gap-2 rounded-lg border-2 border-red-300 bg-red-300/20 px-2 py-1">
-        <AlertTriangle size={16} className="text-red-500" />
-        <p className="text-red-500">{error.message}</p>
+        <AlertTriangle size={14} className="text-red-500" />
+        <p className="text-red-500 text-xs">{error.message}</p>
       </div>
     </div>
   </Message>
@@ -270,127 +272,130 @@ export default function AIBrandPlanner() {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
-      {/* Header with export button */}
-      <div className="border-b bg-white px-4 py-3 shadow-sm">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold">AI Personal Brand Kit Planner</h2>
-            <p className="text-sm text-gray-600">
-              Generate case studies, image prompts, and viral content strategies
-            </p>
-          </div>
-          {messages.length > 0 && (
-            <Button
-              onClick={exportConversationToPDF}
-              disabled={isExporting}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Download size={16} />
-              {isExporting ? "Exporting..." : "Export PDF"}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <ChatContainerRoot className="relative flex-1 space-y-0 overflow-y-auto">
-        <ChatContainerContent className="space-y-12 px-4 py-12">
-          {messages.length === 0 && (
-            <div className="mx-auto max-w-2xl space-y-6 text-center">
-              <h3 className="text-2xl font-bold">
-                Welcome to Your AI Brand Kit Planner
-              </h3>
-              <p className="text-gray-600">
-                I can help you with:
-              </p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-lg border border-gray-200 bg-white p-4 text-left">
-                  <h4 className="mb-2 font-semibold">Brand Case Studies</h4>
-                  <p className="text-sm text-gray-600">
-                    Generate detailed case studies with viral strategies and
-                    best practices
-                  </p>
+    <div className="flex h-full overflow-hidden">
+      {/* Resizable Sidebar with AI Chat */}
+      <ResizableSidebar defaultWidth={400} minWidth={300} maxWidth={600}>
+        <div className="flex h-full flex-col overflow-hidden bg-pink-50">
+          {/* Header with export button */}
+          <div className="border-b border-pink-100 bg-pink-50 px-4 py-4">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-600 to-orange-600 flex items-center justify-center text-white text-sm font-bold shadow-md">
+                    AI
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <h2 className="text-base font-bold text-gray-800">Relo</h2>
+                    <span className="px-2 py-0.5 bg-white text-xs font-medium text-gray-700 rounded border border-gray-300">
+                      AI
+                    </span>
+                  </div>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-4 text-left">
-                  <h4 className="mb-2 font-semibold">Image Prompts</h4>
-                  <p className="text-sm text-gray-600">
-                    Create JSON context prompts for AI image generation tools
-                  </p>
-                </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-4 text-left">
-                  <h4 className="mb-2 font-semibold">Tweet Analysis</h4>
-                  <p className="text-sm text-gray-600">
-                    Analyze tweet virality and get engagement insights
-                  </p>
-                </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-4 text-left">
-                  <h4 className="mb-2 font-semibold">Trend Research</h4>
-                  <p className="text-sm text-gray-600">
-                    Search current trends and successful content strategies
-                  </p>
-                </div>
+                {messages.length > 0 && (
+                  <Button
+                    onClick={exportConversationToPDF}
+                    disabled={isExporting}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2 h-7 text-xs bg-white"
+                  >
+                    <Download size={14} />
+                    {isExporting ? "..." : "PDF"}
+                  </Button>
+                )}
               </div>
-              <p className="text-sm text-gray-500">
-                Try: &quot;Generate a case study about tech influencer growth&quot; or
-                &quot;Create an image prompt for a professional brand logo&quot;
+              <p className="text-sm text-gray-600 text-center font-medium">
+                ideate viral
               </p>
             </div>
-          )}
-
-          {messages.map((message, index) => {
-            const isLastMessage = index === messages.length - 1
-
-            return (
-              <MessageComponent
-                key={message.id}
-                message={message}
-                isLastMessage={isLastMessage}
-              />
-            )
-          })}
-
-          {status === "submitted" && <LoadingMessage />}
-          {status === "error" && error && <ErrorMessage error={error} />}
-        </ChatContainerContent>
-      </ChatContainerRoot>
-
-      <div className="inset-x-0 bottom-0 mx-auto w-full max-w-3xl shrink-0 px-3 pb-3 md:px-5 md:pb-5">
-        <PromptInput
-          isLoading={status !== "ready"}
-          value={input}
-          onValueChange={setInput}
-          onSubmit={handleSubmit}
-          className="border-input bg-popover relative z-10 w-full rounded-3xl border p-0 pt-1 shadow-xs"
-        >
-          <div className="flex flex-col">
-            <PromptInputTextarea
-              placeholder="Ask me to generate case studies, image prompts, or analyze content..."
-              className="min-h-[44px] pt-3 pl-4 text-base leading-[1.3] sm:text-base md:text-base"
-            />
-
-            <PromptInputActions className="mt-3 flex w-full items-center justify-between gap-2 p-2">
-              <div />
-              <div className="flex items-center gap-2">
-                <Button
-                  size="icon"
-                  disabled={
-                    !input.trim() || (status !== "ready" && status !== "error")
-                  }
-                  onClick={handleSubmit}
-                  className="size-9 rounded-full"
-                >
-                  {status === "ready" || status === "error" ? (
-                    <ArrowUp size={18} />
-                  ) : (
-                    <span className="size-3 rounded-xs bg-white" />
-                  )}
-                </Button>
-              </div>
-            </PromptInputActions>
           </div>
-        </PromptInput>
+
+          <ChatContainerRoot className="relative flex-1 space-y-0 overflow-y-auto">
+            <ChatContainerContent className="space-y-6 px-3 py-6">
+              {messages.length === 0 && (
+                <div className="space-y-4 text-center">
+                  <h3 className="text-lg font-bold">
+                    Welcome to Your AI Brand Kit Planner
+                  </h3>
+                  <p className="text-xs text-gray-600">
+                    I can help you with:
+                  </p>
+                  <div className="grid gap-2">
+                    <div className="rounded-lg border border-gray-200 bg-white p-3 text-left">
+                      <h4 className="mb-1 font-semibold text-sm">Brand Case Studies</h4>
+                      <p className="text-xs text-gray-600">
+                        Generate detailed case studies with viral strategies
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-gray-200 bg-white p-3 text-left">
+                      <h4 className="mb-1 font-semibold text-sm">Image Prompts</h4>
+                      <p className="text-xs text-gray-600">
+                        Create JSON context prompts for AI image generation
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {messages.map((message, index) => {
+                const isLastMessage = index === messages.length - 1
+
+                return (
+                  <MessageComponent
+                    key={message.id}
+                    message={message}
+                    isLastMessage={isLastMessage}
+                  />
+                )
+              })}
+
+              {status === "submitted" && <LoadingMessage />}
+              {status === "error" && error && <ErrorMessage error={error} />}
+            </ChatContainerContent>
+          </ChatContainerRoot>
+
+          <div className="shrink-0 px-4 pb-4 bg-pink-50">
+            <PromptInput
+              isLoading={status !== "ready"}
+              value={input}
+              onValueChange={setInput}
+              onSubmit={handleSubmit}
+              className="border-input bg-white relative z-10 w-full rounded-3xl border border-gray-300 p-0 pt-1 shadow-md"
+            >
+              <div className="flex flex-col">
+                <PromptInputTextarea
+                  placeholder="Ask the AI agent..."
+                  className="min-h-[44px] pt-3 pl-4 text-sm leading-[1.3]"
+                />
+
+                <PromptInputActions className="mt-2 flex w-full items-center justify-between gap-2 p-2 pr-3">
+                  <div />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="icon"
+                      disabled={
+                        !input.trim() || (status !== "ready" && status !== "error")
+                      }
+                      onClick={handleSubmit}
+                      className="size-9 rounded-full bg-purple-700 hover:bg-purple-800"
+                    >
+                      {status === "ready" || status === "error" ? (
+                        <ArrowUp size={18} />
+                      ) : (
+                        <span className="size-3 rounded-xs bg-white" />
+                      )}
+                    </Button>
+                  </div>
+                </PromptInputActions>
+              </div>
+            </PromptInput>
+          </div>
+        </div>
+      </ResizableSidebar>
+
+      {/* ReactFlow Dashboard */}
+      <div className="flex-1 h-full">
+        <BrandAIFlowDashboard />
       </div>
     </div>
   )
