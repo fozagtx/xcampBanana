@@ -71,7 +71,7 @@ export default function Home() {
             >
               <iframe
                 className="absolute top-0 left-0 w-full h-full"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&playlist=dQw4w9WgXcQ&controls=1&modestbranding=1"
+                src="https://www.youtube.com/embed/N5qbR0BVnG8?autoplay=1&mute=1&loop=1&playlist=N5qbR0BVnG8&controls=1&modestbranding=1"
                 title="xcampBanana Demo"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
