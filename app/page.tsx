@@ -4,9 +4,19 @@ export const dynamic = "force-dynamic";
 import { CampModal } from "@campnetwork/origin/react";
 import { useAuthState } from "@campnetwork/origin/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
   const { authenticated } = useAuthState();
+  const router = useRouter();
+
+  // Automatically redirect to brand-planner when wallet is connected
+  useEffect(() => {
+    if (authenticated) {
+      router.push("/brand-planner");
+    }
+  }, [authenticated, router]);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-zinc-50 via-white to-zinc-100">
