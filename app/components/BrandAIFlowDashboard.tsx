@@ -4,7 +4,7 @@ import { useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Download, Maximize2, Minimize2 } from "lucide-react"
 import jsPDF from "jspdf"
-import { useAuth, useAuthState, CampModal } from "@campnetwork/origin/react"
+import { CampModal } from "@campnetwork/origin/react"
 
 import PlaceholderNode from "./nodes/PlaceholderNode"
 import TextInputNode from "./nodes/TextInputNode"
@@ -19,9 +19,6 @@ export default function BrandAIFlowDashboard() {
   const [isExporting, setIsExporting] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
-
-  const { authenticated } = useAuthState()
-  const auth = useAuth()
 
   const handleSelectAction = useCallback((action: string) => {
     setSelectedAction(action)
@@ -166,62 +163,6 @@ export default function BrandAIFlowDashboard() {
       setIsProcessing(false)
     }
   }, [selectedAction])
-
-  const handleMintNFT = useCallback(async () => {
-    if (!authenticated) {
-      auth?.connect()
-      return
-    }
-
-    if (!resultContent) {
-      alert("No content to mint")
-      return
-    }
-
-    if (!auth?.origin) {
-      alert("Origin SDK not initialized")
-      return
-    }
-
-    try {
-      // Create a text file from the content
-      const fileName = selectedAction === "image-prompt" ? "ai-image-prompt" : "brand-case-study"
-      const contentName = selectedAction === "image-prompt" ? "AI Image Prompt" : "Brand Case Study"
-
-      const fileContent = JSON.stringify({
-        type: contentName,
-        content: resultContent,
-        generatedAt: new Date().toISOString(),
-        action: selectedAction
-      }, null, 2)
-
-      const blob = new Blob([fileContent], { type: "application/json" })
-      const file = new File([blob], `${fileName}-${Date.now()}.json`, { type: "application/json" })
-
-      // Set default licensing terms
-      const license = {
-        price: BigInt("1000000000000000"), // 0.001 CAMP in wei
-        duration: 86400, // 1 day in seconds
-        royaltyBps: 1000, // 10% in basis points
-        paymentToken: "0x0000000000000000000000000000000000000000" as const,
-      }
-
-      const metadata = {
-        name: `${contentName} - AI Generated`,
-        description: `AI-generated ${contentName.toLowerCase()} from xCampBanana Brand Kit`,
-        price: 0.001,
-        duration: 1,
-        royalty: 10,
-      }
-
-      const result = await auth.origin.mintFile(file, metadata, license)
-
-      alert(`Successfully minted! Token ID: ${result}\n\nPrice: 0.001 CAMP\nDuration: 1 day\nRoyalty: 10%`)
-    } catch (error) {
-      console.error("Minting error:", error)
-      alert(`Failed to mint: ${error instanceof Error ? error.message : "Unknown error"}`)
-    }
-  }, [authenticated, auth, resultContent, selectedAction])
 
   const exportToPDF = useCallback(async () => {
     if (!resultContent) {
@@ -370,9 +311,7 @@ export default function BrandAIFlowDashboard() {
                 isLoading: isProcessing,
                 selectedAction,
                 onExportPDF: exportToPDF,
-                onMintNFT: handleMintNFT,
                 isExporting,
-                authenticated,
               }}
             />
           </div>
