@@ -12,10 +12,10 @@ export default function BrandPlannerPage() {
       {/* Header */}
       <header className="flex items-center justify-between p-6 bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard">
+          <Link href="/">
             <Button variant="ghost" size="sm" className="gap-2">
               <ArrowLeft size={16} />
-              Back to Dashboard
+              Back to Home
             </Button>
           </Link>
           <div>
