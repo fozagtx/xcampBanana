@@ -31,15 +31,31 @@ graph TB
 ## Quick Start
 
 ```bash
-# Install
+# Install dependencies
 npm install
 
-# Dev
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local and add your OpenAI API key
+
+# Run development server
 npm run dev
 
-# Build
+# Build for production
 npm run build
 ```
+
+### Environment Setup
+
+1. **OpenAI API Key** (Required)
+   - Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+   - Add to `.env.local`: `OPENAI_API_KEY=sk-your-key-here`
+   - Used for AI brand kit generation and chatbot features
+
+2. **Brave Search API** (Optional)
+   - Get your API key from [Brave Search API](https://brave.com/search/api/)
+   - Add to `.env.local`: `BRAVE_SEARCH_API_KEY=your-key-here`
+   - Used for web search functionality in brand case studies
 
 ## Features
 

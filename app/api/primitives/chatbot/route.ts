@@ -7,6 +7,17 @@ export const maxDuration = 30
 export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json()
 
+  // Check if OpenAI API key is configured
+  if (!process.env.OPENAI_API_KEY) {
+    console.error("OPENAI_API_KEY is not configured")
+    return new Response(
+      JSON.stringify({ error: "OpenAI API key is not configured. Please set OPENAI_API_KEY in your environment variables." }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    )
+  }
+
+  console.log("Processing chatbot request with", messages.length, "messages")
+
   const result = streamText({
     model: openai("gpt-4o"),
     system: `You are an AI Personal Brand Kit Planner. You help users:

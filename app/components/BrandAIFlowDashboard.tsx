@@ -4,7 +4,7 @@ import { useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Download, Maximize2, Minimize2 } from "lucide-react"
 import jsPDF from "jspdf"
-import { useAuth, useAuthState } from "@campnetwork/origin/react"
+import { useAuth, useAuthState, CampModal } from "@campnetwork/origin/react"
 
 import PlaceholderNode from "./nodes/PlaceholderNode"
 import TextInputNode from "./nodes/TextInputNode"
@@ -72,7 +72,10 @@ export default function BrandAIFlowDashboard() {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to generate result")
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || "Failed to generate result"
+        console.error("API Error:", errorMessage)
+        throw new Error(errorMessage)
       }
 
       const reader = response.body?.getReader()
@@ -80,9 +83,13 @@ export default function BrandAIFlowDashboard() {
       let resultText = ""
 
       if (reader) {
+        console.log("Starting to read stream...")
         while (true) {
           const { done, value } = await reader.read()
-          if (done) break
+          if (done) {
+            console.log("Stream reading completed")
+            break
+          }
 
           const chunk = decoder.decode(value)
           const lines = chunk.split("\n")
@@ -95,19 +102,23 @@ export default function BrandAIFlowDashboard() {
                 if (parsed.parts && parsed.parts[0] && parsed.parts[0].text) {
                   resultText += parsed.parts[0].text
                   setResultContent(resultText)
+                  console.log("Accumulated text length:", resultText.length)
                 }
-              } catch {
-                // Skip invalid JSON
+              } catch (e) {
+                console.warn("Failed to parse stream line:", e)
               }
             }
           }
         }
+      } else {
+        console.error("No reader available from response body")
       }
 
       setResultContent(resultText.trim())
     } catch (error) {
       console.error("Error generating result:", error)
-      setResultContent("Error: Failed to generate result. Please try again.")
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
+      setResultContent(`❌ Error: ${errorMessage}\n\nPlease check:\n1. OpenAI API key is configured (OPENAI_API_KEY environment variable)\n2. You have sufficient API credits\n3. Your internet connection is stable\n\nTry again or contact support if the issue persists.`)
     } finally {
       setIsProcessing(false)
     }
@@ -274,6 +285,9 @@ export default function BrandAIFlowDashboard() {
             <Maximize2 size={16} />
           )}
         </Button>
+        <div className="bg-white/90 backdrop-blur-sm shadow-lg rounded-md">
+          <CampModal />
+        </div>
       </div>
 
       {/* Main Content */}
