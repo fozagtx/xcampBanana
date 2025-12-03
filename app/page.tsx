@@ -21,12 +21,20 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               {authenticated && (
-                <Link
-                  href="/dashboard"
-                  className="px-6 py-2 bg-linear-to-r from-yellow-600 to-orange-600 text-white rounded-full font-medium hover:from-yellow-700 hover:to-orange-700 transition-all shadow-md"
-                >
-                  Dashboard
-                </Link>
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="px-6 py-2 bg-linear-to-r from-yellow-600 to-orange-600 text-white rounded-full font-medium hover:from-yellow-700 hover:to-orange-700 transition-all shadow-md"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/brand-planner"
+                    className="px-6 py-2 bg-linear-to-r from-purple-600 to-pink-600 text-white rounded-full font-medium hover:from-purple-700 hover:to-pink-700 transition-all shadow-md"
+                  >
+                    AI Brand Planner
+                  </Link>
+                </>
               )}
               <CampModal />
             </div>
